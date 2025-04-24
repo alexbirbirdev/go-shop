@@ -1,0 +1,139 @@
+package handlers
+
+import (
+	"alexbirbirdev/go-shop/config"
+	"alexbirbirdev/go-shop/internal/models"
+	"errors"
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
+)
+
+func CreateOrder(c *gin.Context) {
+	db := config.InitDB()
+	if db == nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Database connection failed",
+		})
+		return
+	}
+
+	userID := 1
+
+	var cartItems []models.CartItem
+
+	if err := db.Preload("Product").Preload("ProductVariant").Where("user_id = ?", userID).Find(&cartItems).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to fetch cart items",
+		})
+		return
+	}
+
+	if len(cartItems) == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Cart is empty",
+		})
+		return
+	}
+
+	var total float64
+
+	var orderItems []models.OrderItem
+
+	for _, item := range cartItems {
+		price := item.ProductVariant.Price
+		quantity := item.Quantity
+		total += price * float64(quantity)
+
+		orderItem := models.OrderItem{
+			ProductID:        item.ProductID,
+			ProductVariantID: item.ProductVariantID,
+			Quantity:         quantity,
+			Price:            price,
+		}
+
+		orderItems = append(orderItems, orderItem)
+	}
+
+	order := models.Order{
+		UserID:     uint(userID),
+		TotalPrice: total,
+		Status:     "pending",
+		OrderItems: orderItems,
+	}
+
+	if err := db.Create(&order).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to create order",
+		})
+		return
+	}
+
+	if err := db.Where("user_id = ?", userID).Delete(&cartItems).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to clear cart",
+		})
+		return
+	}
+	c.JSON(http.StatusCreated, gin.H{
+		"message": "Order created successfully",
+		"order":   order,
+	})
+}
+
+func GetOrders(c *gin.Context) {
+	db := config.InitDB()
+	if db == nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Database connection failed",
+		})
+		return
+	}
+
+	userID := 1
+
+	var orders []models.Order
+	if err := db.Preload("OrderItems").Where("user_id = ?", userID).Find(&orders).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to fetch orders",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"orders": orders,
+	})
+}
+
+func GetOrder(c *gin.Context) {
+	db := config.InitDB()
+	if db == nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Database connection failed",
+		})
+		return
+	}
+
+	userID := 1
+	id := c.Param("id")
+
+	var order models.Order
+
+	if err := db.Preload("OrderItems").Where("user_id = ? AND id = ?", userID, id).Find(&order).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{
+				"error": "Order not found",
+			})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to fetch order",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"order": order,
+	})
+}
