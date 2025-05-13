@@ -36,7 +36,7 @@ func SetupRoutes(r *gin.Engine) {
 		productVariantRoutes.PUT("/:id", handlers.UpdateProductVariant)
 	}
 
-	cartItemRoutes := r.Group("/cart")
+	cartItemRoutes := r.Group("/cart").Use(middleware.AuthMiddleware())
 	{
 		cartItemRoutes.POST("/", handlers.CreateCartItem)
 		cartItemRoutes.GET("/", handlers.GetCartItems)
@@ -47,7 +47,7 @@ func SetupRoutes(r *gin.Engine) {
 		cartItemRoutes.POST("/:id/decrement", handlers.DecrementCartItem)
 	}
 
-	orderRoutes := r.Group("/orders")
+	orderRoutes := r.Group("/orders").Use(middleware.AuthMiddleware())
 	{
 		orderRoutes.POST("/", handlers.CreateOrder)
 		orderRoutes.GET("/", handlers.GetOrders)
@@ -68,5 +68,11 @@ func SetupRoutes(r *gin.Engine) {
 		authRoutes.POST("/signin", middleware.AuthRequired, handlers.SignIn)
 		authRoutes.POST("/signup", middleware.AuthRequired, handlers.SignUp)
 		authRoutes.POST("/logout", middleware.AuthMiddleware(), handlers.Logout)
+	}
+
+	userProfileRoutes := r.Group("/profile")
+	{
+		userProfileRoutes.GET("/", middleware.AuthMiddleware(), handlers.GetUserProfile)
+		userProfileRoutes.PUT("/", middleware.AuthMiddleware(), handlers.UpdateUserProfile)
 	}
 }

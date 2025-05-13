@@ -3,6 +3,7 @@ package handlers
 import (
 	"alexbirbirdev/go-shop/config"
 	"alexbirbirdev/go-shop/internal/models"
+	"alexbirbirdev/go-shop/internal/services/auth"
 	"errors"
 	"net/http"
 
@@ -19,7 +20,13 @@ func CreateOrder(c *gin.Context) {
 		return
 	}
 
-	userID := 1
+	userID, err := auth.GetUserIDFromCookie(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "Unauthorized - " + err.Error(),
+		})
+		return
+	}
 
 	var cartItems []models.CartItem
 
@@ -91,7 +98,13 @@ func GetOrders(c *gin.Context) {
 		return
 	}
 
-	userID := 1
+	userID, err := auth.GetUserIDFromCookie(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "Unauthorized - " + err.Error(),
+		})
+		return
+	}
 
 	var orders []models.Order
 	if err := db.Preload("OrderItems").Where("user_id = ?", userID).Find(&orders).Error; err != nil {
@@ -115,7 +128,14 @@ func GetOrder(c *gin.Context) {
 		return
 	}
 
-	userID := 1
+	userID, err := auth.GetUserIDFromCookie(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "Unauthorized - " + err.Error(),
+		})
+		return
+	}
+
 	id := c.Param("id")
 
 	var order models.Order
