@@ -34,25 +34,29 @@ func GetProducts(c *gin.Context) {
 
 	offset := (page - 1) * limit
 
-	// обработка лишней страницы
-	// var totalProducts int64
-	// if err := db.Model(&models.Product{}).Count(&totalProducts).Error; err != nil {
-	// 	c.JSON(http.StatusInternalServerError, gin.H{
-	// 		"error": "Failed to count products",
-	// 	})
-	// 	return
-	// }
-	// totalPages := int(math.Ceil(float64(totalProducts) / float64(limit)))
+	sortParam := c.DefaultQuery("sort", "created_desc")
 
-	// if page > totalPages && totalPages != 0 {
-	// 	c.JSON(http.StatusBadRequest, gin.H{
-	// 		"error": "Page number exceeds total pages",
-	// 	})
-	// 	return
-	// }
+	var sortBy string
+	switch sortParam {
+
+	case "price_desc":
+		sortBy = "price DESC"
+	case "price_asc":
+		sortBy = "price ASC"
+	case "name_desc":
+		sortBy = "name DESC"
+	case "name_asc":
+		sortBy = "name ASC"
+	case "created_asc":
+		sortBy = "created_at ASC"
+	case "created_desc":
+		fallthrough
+	default:
+		sortBy = "created_at DESC"
+	}
 
 	var products []models.Product
-	if err := db.Limit(limit).Offset(offset).Find(&products).Error; err != nil {
+	if err := db.Order(sortBy).Limit(limit).Offset(offset).Find(&products).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Failed to fetch products",
 		})
