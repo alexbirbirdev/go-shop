@@ -55,8 +55,35 @@ func GetProducts(c *gin.Context) {
 		sortBy = "created_at DESC"
 	}
 
+	categoryStr := c.Query("category")
+	priceMinStr := c.Query("price_min")
+	priceMaxStr := c.Query("price_max")
+
+	query := db.Model(&models.Product{})
+
+	if categoryStr != "" {
+		category, err := strconv.Atoi(categoryStr)
+		if err == nil {
+			query = query.Where("category_id = ?", category)
+		}
+	}
+	if priceMinStr != "" {
+		priceMin, err := strconv.ParseFloat(priceMinStr, 64)
+		if err == nil {
+			query = query.Where("price >= ?", priceMin)
+		}
+	}
+	if priceMaxStr != "" {
+		priceMax, err := strconv.ParseFloat(priceMaxStr, 64)
+		if err == nil {
+			query = query.Where("price <= ?", priceMax)
+		}
+	}
+
+	query = query.Order(sortBy).Limit(limit).Offset(offset)
+
 	var products []models.Product
-	if err := db.Order(sortBy).Limit(limit).Offset(offset).Find(&products).Error; err != nil {
+	if err := query.Find(&products).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Failed to fetch products",
 		})
