@@ -80,6 +80,11 @@ func GetProducts(c *gin.Context) {
 		}
 	}
 
+	search := c.Query("search")
+	if search != "" {
+		query = query.Where("name ILIKE ? OR description ILIKE ?", "%"+search+"%", "%"+search+"%")
+	}
+
 	query = query.Order(sortBy).Limit(limit).Offset(offset)
 
 	var products []models.Product
