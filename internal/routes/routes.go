@@ -75,4 +75,13 @@ func SetupRoutes(r *gin.Engine) {
 		userProfileRoutes.GET("/", middleware.AuthMiddleware(), handlers.GetUserProfile)
 		userProfileRoutes.PUT("/", middleware.AuthMiddleware(), handlers.UpdateUserProfile)
 	}
+
+	favoriteRoutes := r.Group("/favorites").Use(middleware.AuthMiddleware())
+	{
+		favoriteRoutes.POST("/", handlers.AddFavorite)
+		favoriteRoutes.GET("/", handlers.GetFavorites)
+		favoriteRoutes.GET("/:id", handlers.CheckFavorite)
+		favoriteRoutes.DELETE("/:id", handlers.DeleteFavorite)
+		favoriteRoutes.DELETE("/", handlers.ClearFavorites)
+	}
 }
