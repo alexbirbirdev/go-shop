@@ -4,7 +4,9 @@ import (
 	"alexbirbirdev/go-shop/config"
 	"alexbirbirdev/go-shop/internal/models"
 	"errors"
+	"math"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -19,8 +21,38 @@ func GetProducts(c *gin.Context) {
 		return
 	}
 
+	pageStr := c.DefaultQuery("page", "1")
+	limitStr := c.DefaultQuery("limit", "10")
+
+	page, err := strconv.Atoi(pageStr)
+	if err != nil || page < 1 {
+		page = 1
+	}
+	limit, err := strconv.Atoi(limitStr)
+	if err != nil || limit < 1 {
+		limit = 10
+	}
+
+	offset := (page - 1) * limit
+
+	var totalProducts int64
+	if err := db.Model(&models.Product{}).Count(&totalProducts).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to count products",
+		})
+		return
+	}
+	totalPages := int(math.Ceil(float64(totalProducts) / float64(limit)))
+
+	if page > totalPages && totalPages != 0 {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Page number exceeds total pages",
+		})
+		return
+	}
+
 	var products []models.Product
-	if err := db.Find(&products).Error; err != nil {
+	if err := db.Limit(limit).Offset(offset).Find(&products).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Failed to fetch products",
 		})
