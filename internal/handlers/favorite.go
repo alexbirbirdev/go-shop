@@ -3,7 +3,7 @@ package handlers
 import (
 	"alexbirbirdev/go-shop/config"
 	"alexbirbirdev/go-shop/internal/models"
-	"alexbirbirdev/go-shop/internal/services/auth"
+	"alexbirbirdev/go-shop/internal/utils"
 	"errors"
 	"net/http"
 
@@ -21,10 +21,10 @@ func AddFavorite(c *gin.Context) {
 		return
 	}
 
-	userID, err := auth.GetUserIDFromCookie(c)
-	if err != nil {
+	userID, ok := utils.GetUserID(c)
+	if !ok {
 		c.JSON(http.StatusUnauthorized, gin.H{
-			"error": "Unauthorized - " + err.Error(),
+			"error": "Unauthorized",
 		})
 		return
 	}
@@ -77,10 +77,10 @@ func GetFavorites(c *gin.Context) {
 		return
 	}
 
-	userID, err := auth.GetUserIDFromCookie(c)
-	if err != nil {
+	userID, ok := utils.GetUserID(c)
+	if !ok {
 		c.JSON(http.StatusUnauthorized, gin.H{
-			"error": "Unauthorized - " + err.Error(),
+			"error": "Unauthorized",
 		})
 		return
 	}
@@ -114,10 +114,10 @@ func DeleteFavorite(c *gin.Context) {
 		return
 	}
 
-	userID, err := auth.GetUserIDFromCookie(c)
-	if err != nil {
+	userID, ok := utils.GetUserID(c)
+	if !ok {
 		c.JSON(http.StatusUnauthorized, gin.H{
-			"error": "Unauthorized - " + err.Error(),
+			"error": "Unauthorized",
 		})
 		return
 	}
@@ -160,10 +160,10 @@ func ClearFavorites(c *gin.Context) {
 		return
 	}
 
-	userID, err := auth.GetUserIDFromCookie(c)
-	if err != nil {
+	userID, ok := utils.GetUserID(c)
+	if !ok {
 		c.JSON(http.StatusUnauthorized, gin.H{
-			"error": "Unauthorized - " + err.Error(),
+			"error": "Unauthorized",
 		})
 		return
 	}
@@ -191,10 +191,10 @@ func CheckFavorite(c *gin.Context) {
 		return
 	}
 
-	userID, err := auth.GetUserIDFromCookie(c)
-	if err != nil {
+	userID, ok := utils.GetUserID(c)
+	if !ok {
 		c.JSON(http.StatusUnauthorized, gin.H{
-			"error": "Unauthorized - " + err.Error(),
+			"error": "Unauthorized",
 		})
 		return
 	}
