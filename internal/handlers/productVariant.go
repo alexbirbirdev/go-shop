@@ -136,15 +136,37 @@ func UpdateProductVariant(c *gin.Context) {
 		return
 	}
 
-	var input models.ProductVariant
+	var input struct {
+		Name  *string  `json:"name,omitempty"`
+		Stock *int     `json:"stock,omitempty"`
+		Price *float64 `json:"price,omitempty"`
+	}
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "Invalid input",
-		})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
 		return
 	}
 
-	if err := db.Model(&variant).Updates(input).Error; err != nil {
+	// Создаем карту для обновления только тех полей, которые пришли
+	updates := make(map[string]interface{})
+
+	if input.Name != nil {
+		updates["name"] = *input.Name
+	}
+	if input.Stock != nil {
+		updates["stock"] = *input.Stock
+		// Также обновляем флаг IsActive
+		updates["is_active"] = (*input.Stock > 0)
+	}
+	if input.Price != nil {
+		updates["price"] = *input.Price
+	}
+
+	if len(updates) == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "No fields to update"})
+		return
+	}
+
+	if err := db.Model(&variant).Updates(updates).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Failed to update product variant",
 		})

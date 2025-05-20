@@ -80,6 +80,8 @@ func SetupRoutes(r *gin.Engine) {
 	adminRoutes.Use(middleware.AuthMiddleware(), middleware.AdminOnly())
 	adminProductRoutes := adminRoutes.Group("/products")
 	{
+		adminProductRoutes.GET("/", handlers.AdminGetProducts)
+		adminProductRoutes.GET("/:id", handlers.AdminGetProduct)
 		adminProductRoutes.DELETE("/:id", handlers.DeleteProduct)
 		adminProductRoutes.POST("/", handlers.CreateProduct)
 		adminProductRoutes.PUT("/:id", handlers.UpdateProduct)

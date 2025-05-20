@@ -79,7 +79,7 @@ func GetProducts(c *gin.Context) {
 		query = query.Where("name ILIKE ? OR description ILIKE ?", "%"+search+"%", "%"+search+"%")
 	}
 
-	query = query.Order(sortBy).Limit(limit).Offset(offset)
+	query = query.Order(sortBy).Limit(limit).Offset(offset).Where("is_active = ?", true)
 
 	var products []models.Product
 	if err := query.Find(&products).Error; err != nil {
@@ -89,8 +89,30 @@ func GetProducts(c *gin.Context) {
 		return
 	}
 
+	type ProductResponse struct {
+		ID          uint    `json:"id"`
+		Name        string  `json:"name"`
+		Description string  `json:"description"`
+		Price       float64 `json:"price"`
+		Image       string  `json:"image"`
+		CategoryID  uint    `json:"category_id"`
+		Stock       int     `json:"stock"`
+	}
+	var result []ProductResponse
+	for _, product := range products {
+		result = append(result, ProductResponse{
+			ID:          product.ID,
+			Name:        product.Name,
+			Description: product.Description,
+			Price:       product.Price,
+			Image:       product.Image,
+			CategoryID:  product.CategoryID,
+			Stock:       product.Stock,
+		})
+	}
+
 	c.JSON(http.StatusOK, gin.H{
-		"products": products,
+		"products": result,
 	})
 }
 
@@ -112,9 +134,29 @@ func GetProduct(c *gin.Context) {
 		})
 		return
 	}
+	type ProductResponse struct {
+		ID          uint                    `json:"id"`
+		Name        string                  `json:"name"`
+		Description string                  `json:"description"`
+		Price       float64                 `json:"price"`
+		Image       string                  `json:"image"`
+		CategoryID  uint                    `json:"category_id"`
+		Stock       int                     `json:"stock"`
+		Variants    []models.ProductVariant `json:"variants"`
+	}
+	result := ProductResponse{
+		ID:          product.ID,
+		Name:        product.Name,
+		Description: product.Description,
+		Price:       product.Price,
+		Image:       product.Image,
+		CategoryID:  product.CategoryID,
+		Stock:       product.Stock,
+		Variants:    product.Variants,
+	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"product": product,
+		"product": result,
 	})
 }
 
@@ -206,5 +248,112 @@ func DeleteProduct(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Product deleted",
+	})
+}
+
+func AdminGetProducts(c *gin.Context) {
+	db := config.DB
+
+	pageStr := c.DefaultQuery("page", "1")
+	limitStr := c.DefaultQuery("limit", "10")
+
+	page, err := strconv.Atoi(pageStr)
+	if err != nil || page < 1 {
+		page = 1
+	}
+	limit, err := strconv.Atoi(limitStr)
+	if err != nil || limit < 1 {
+		limit = 10
+	}
+
+	offset := (page - 1) * limit
+
+	sortParam := c.DefaultQuery("sort", "created_desc")
+
+	var sortBy string
+	switch sortParam {
+
+	case "price_desc":
+		sortBy = "price DESC"
+	case "price_asc":
+		sortBy = "price ASC"
+	case "name_desc":
+		sortBy = "name DESC"
+	case "name_asc":
+		sortBy = "name ASC"
+	case "created_asc":
+		sortBy = "created_at ASC"
+	case "created_desc":
+		fallthrough
+	default:
+		sortBy = "created_at DESC"
+	}
+
+	categoryStr := c.Query("category")
+	priceMinStr := c.Query("price_min")
+	priceMaxStr := c.Query("price_max")
+
+	query := db.Model(&models.Product{})
+
+	if categoryStr != "" {
+		category, err := strconv.Atoi(categoryStr)
+		if err == nil {
+			query = query.Where("category_id = ?", category)
+		}
+	}
+	if priceMinStr != "" {
+		priceMin, err := strconv.ParseFloat(priceMinStr, 64)
+		if err == nil {
+			query = query.Where("price >= ?", priceMin)
+		}
+	}
+	if priceMaxStr != "" {
+		priceMax, err := strconv.ParseFloat(priceMaxStr, 64)
+		if err == nil {
+			query = query.Where("price <= ?", priceMax)
+		}
+	}
+
+	search := c.Query("search")
+	if search != "" {
+		query = query.Where("name ILIKE ? OR description ILIKE ?", "%"+search+"%", "%"+search+"%")
+	}
+
+	query = query.Order(sortBy).Limit(limit).Offset(offset)
+
+	var products []models.Product
+	if err := query.Find(&products).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to fetch products",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"products": products,
+	})
+}
+
+func AdminGetProduct(c *gin.Context) {
+	id := c.Param("id")
+	db := config.DB
+
+	var product models.Product
+	if err := db.First(&product, id).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{
+				"error": "Product not found",
+			})
+			return
+		}
+
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to fetch product",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"product": product,
 	})
 }
