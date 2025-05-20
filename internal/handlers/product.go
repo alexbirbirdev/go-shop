@@ -12,13 +12,7 @@ import (
 )
 
 func GetProducts(c *gin.Context) {
-	db := config.InitDB()
-	if db == nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Database connection error",
-		})
-		return
-	}
+	db := config.DB
 
 	pageStr := c.DefaultQuery("page", "1")
 	limitStr := c.DefaultQuery("limit", "10")
@@ -102,13 +96,7 @@ func GetProducts(c *gin.Context) {
 
 func GetProduct(c *gin.Context) {
 	id := c.Param("id")
-	db := config.InitDB()
-	if db == nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Database connection error",
-		})
-		return
-	}
+	db := config.DB
 
 	var product models.Product
 	if err := db.First(&product, id).Error; err != nil {
@@ -140,7 +128,7 @@ func CreateProduct(c *gin.Context) {
 		return
 	}
 
-	db := config.InitDB()
+	db := config.DB
 	if err := db.Create(&product).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Failed to create product",
@@ -154,13 +142,7 @@ func CreateProduct(c *gin.Context) {
 
 func UpdateProduct(c *gin.Context) {
 	id := c.Param("id")
-	db := config.InitDB()
-	if db == nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Database connection error",
-		})
-		return
-	}
+	db := config.DB
 
 	var product models.Product
 	if err := db.First(&product, id).Error; err != nil {
@@ -196,13 +178,7 @@ func UpdateProduct(c *gin.Context) {
 }
 
 func DeleteProduct(c *gin.Context) {
-	db := config.InitDB()
-
-	if db == nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Database connection error",
-		})
-	}
+	db := config.DB
 
 	id := c.Param("id")
 

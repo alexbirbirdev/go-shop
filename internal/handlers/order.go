@@ -3,7 +3,7 @@ package handlers
 import (
 	"alexbirbirdev/go-shop/config"
 	"alexbirbirdev/go-shop/internal/models"
-	"alexbirbirdev/go-shop/internal/services/auth"
+	"alexbirbirdev/go-shop/internal/utils"
 	"errors"
 	"net/http"
 
@@ -12,18 +12,12 @@ import (
 )
 
 func CreateOrder(c *gin.Context) {
-	db := config.InitDB()
-	if db == nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Database connection failed",
-		})
-		return
-	}
+	db := config.DB
 
-	userID, err := auth.GetUserIDFromCookie(c)
-	if err != nil {
+	userID, ok := utils.GetUserID(c)
+	if !ok {
 		c.JSON(http.StatusUnauthorized, gin.H{
-			"error": "Unauthorized - " + err.Error(),
+			"error": "Unauthorized",
 		})
 		return
 	}
@@ -90,18 +84,12 @@ func CreateOrder(c *gin.Context) {
 }
 
 func GetOrders(c *gin.Context) {
-	db := config.InitDB()
-	if db == nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Database connection failed",
-		})
-		return
-	}
+	db := config.DB
 
-	userID, err := auth.GetUserIDFromCookie(c)
-	if err != nil {
+	userID, ok := utils.GetUserID(c)
+	if !ok {
 		c.JSON(http.StatusUnauthorized, gin.H{
-			"error": "Unauthorized - " + err.Error(),
+			"error": "Unauthorized",
 		})
 		return
 	}
@@ -120,18 +108,12 @@ func GetOrders(c *gin.Context) {
 }
 
 func GetOrder(c *gin.Context) {
-	db := config.InitDB()
-	if db == nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Database connection failed",
-		})
-		return
-	}
+	db := config.DB
 
-	userID, err := auth.GetUserIDFromCookie(c)
-	if err != nil {
+	userID, ok := utils.GetUserID(c)
+	if !ok {
 		c.JSON(http.StatusUnauthorized, gin.H{
-			"error": "Unauthorized - " + err.Error(),
+			"error": "Unauthorized",
 		})
 		return
 	}
@@ -160,13 +142,7 @@ func GetOrder(c *gin.Context) {
 
 // admin
 func AdminGetOrders(c *gin.Context) {
-	db := config.InitDB()
-	if db == nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Database connection failed",
-		})
-		return
-	}
+	db := config.DB
 
 	var orders []models.Order
 	if err := db.Preload("OrderItems").Find(&orders).Error; err != nil {
@@ -182,13 +158,7 @@ func AdminGetOrders(c *gin.Context) {
 }
 
 func AdminGetOrder(c *gin.Context) {
-	db := config.InitDB()
-	if db == nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Database connection failed",
-		})
-		return
-	}
+	db := config.DB
 
 	id := c.Param("id")
 
@@ -213,13 +183,7 @@ func AdminGetOrder(c *gin.Context) {
 }
 
 func UpdateOrderStatus(c *gin.Context) {
-	db := config.InitDB()
-	if db == nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Database connection failed",
-		})
-		return
-	}
+	db := config.DB
 
 	id := c.Param("id")
 	var order models.Order

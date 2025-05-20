@@ -12,13 +12,7 @@ import (
 )
 
 func GetProductVariants(c *gin.Context) {
-	db := config.InitDB()
-	if db == nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Database connection error",
-		})
-		return
-	}
+	db := config.DB
 
 	id := c.Param("id")
 	var variants []models.ProductVariant
@@ -35,13 +29,7 @@ func GetProductVariants(c *gin.Context) {
 }
 
 func GetProductVariant(c *gin.Context) {
-	db := config.InitDB()
-	if db == nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Database connection error",
-		})
-		return
-	}
+	db := config.DB
 
 	id := c.Param("id")
 	var variant models.ProductVariant
@@ -65,13 +53,7 @@ func GetProductVariant(c *gin.Context) {
 
 // admin
 func CreateProductVariant(c *gin.Context) {
-	db := config.InitDB()
-	if db == nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Database connection error",
-		})
-		return
-	}
+	db := config.DB
 
 	id := c.Param("id")
 	var products []models.Product
@@ -108,13 +90,7 @@ func CreateProductVariant(c *gin.Context) {
 }
 
 func DeleteProductVariant(c *gin.Context) {
-	db := config.InitDB()
-	if db == nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Database connection error",
-		})
-		return
-	}
+	db := config.DB
 
 	id := c.Param("id")
 	var variant models.ProductVariant
@@ -142,13 +118,7 @@ func DeleteProductVariant(c *gin.Context) {
 }
 
 func UpdateProductVariant(c *gin.Context) {
-	db := config.InitDB()
-	if db == nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Database connection error",
-		})
-		return
-	}
+	db := config.DB
 
 	id := c.Param("id")
 

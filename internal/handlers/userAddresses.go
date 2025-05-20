@@ -3,7 +3,7 @@ package handlers
 import (
 	"alexbirbirdev/go-shop/config"
 	"alexbirbirdev/go-shop/internal/models"
-	"alexbirbirdev/go-shop/internal/services/auth"
+	"alexbirbirdev/go-shop/internal/utils"
 	"errors"
 	"net/http"
 
@@ -12,17 +12,11 @@ import (
 )
 
 func CreateUserAddresses(c *gin.Context) {
-	db := config.InitDB()
-	if db == nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Database connection error",
-		})
-		return
-	}
-	userID, err := auth.GetUserIDFromCookie(c)
-	if err != nil {
+	db := config.DB
+	userID, ok := utils.GetUserID(c)
+	if !ok {
 		c.JSON(http.StatusUnauthorized, gin.H{
-			"error": "Unauthorized - " + err.Error(),
+			"error": "Unauthorized",
 		})
 		return
 	}
@@ -47,17 +41,11 @@ func CreateUserAddresses(c *gin.Context) {
 }
 
 func GetUserAddress(c *gin.Context) {
-	db := config.InitDB()
-	if db == nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Database connection error",
-		})
-		return
-	}
-	userID, err := auth.GetUserIDFromCookie(c)
-	if err != nil {
+	db := config.DB
+	userID, ok := utils.GetUserID(c)
+	if !ok {
 		c.JSON(http.StatusUnauthorized, gin.H{
-			"error": "Unauthorized - " + err.Error(),
+			"error": "Unauthorized",
 		})
 		return
 	}
@@ -74,17 +62,11 @@ func GetUserAddress(c *gin.Context) {
 }
 
 func GetUserAddresses(c *gin.Context) {
-	db := config.InitDB()
-	if db == nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Database connection error",
-		})
-		return
-	}
-	userID, err := auth.GetUserIDFromCookie(c)
-	if err != nil {
+	db := config.DB
+	userID, ok := utils.GetUserID(c)
+	if !ok {
 		c.JSON(http.StatusUnauthorized, gin.H{
-			"error": "Unauthorized - " + err.Error(),
+			"error": "Unauthorized",
 		})
 		return
 	}
@@ -102,17 +84,11 @@ func GetUserAddresses(c *gin.Context) {
 }
 
 func DeleteUserAddress(c *gin.Context) {
-	db := config.InitDB()
-	if db == nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Database connection error",
-		})
-		return
-	}
-	userID, err := auth.GetUserIDFromCookie(c)
-	if err != nil {
+	db := config.DB
+	userID, ok := utils.GetUserID(c)
+	if !ok {
 		c.JSON(http.StatusUnauthorized, gin.H{
-			"error": "Unauthorized - " + err.Error(),
+			"error": "Unauthorized",
 		})
 		return
 	}
@@ -148,18 +124,12 @@ func DeleteUserAddress(c *gin.Context) {
 	})
 }
 func UpdateUserAddress(c *gin.Context) {
-	db := config.InitDB()
-	if db == nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Database connection error",
-		})
-		return
-	}
+	db := config.DB
 
-	userID, err := auth.GetUserIDFromCookie(c)
-	if err != nil {
+	userID, ok := utils.GetUserID(c)
+	if !ok {
 		c.JSON(http.StatusUnauthorized, gin.H{
-			"error": "Unauthorized - " + err.Error(),
+			"error": "Unauthorized",
 		})
 		return
 	}

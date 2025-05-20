@@ -13,13 +13,7 @@ import (
 )
 
 func SignUp(c *gin.Context) {
-	db := config.InitDB()
-	if db == nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Database connection error",
-		})
-		return
-	}
+	db := config.DB
 
 	var input struct {
 		Email    string `json:"email" binding:"required,email"`
@@ -33,8 +27,8 @@ func SignUp(c *gin.Context) {
 		return
 	}
 
-	var exsistingUser models.User
-	if err := db.Where("email = ?", input.Email).First(&exsistingUser).Error; err == nil {
+	var existingUser models.User
+	if err := db.Where("email = ?", input.Email).First(&existingUser).Error; err == nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "User with this email already exists",
 		})
@@ -68,13 +62,7 @@ func SignUp(c *gin.Context) {
 
 }
 func SignIn(c *gin.Context) {
-	db := config.InitDB()
-	if db == nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Database connection error",
-		})
-		return
-	}
+	db := config.DB
 	var input struct {
 		Email    string `json:"email" binding:"required,email"`
 		Password string `json:"password" binding:"required,min=6"`

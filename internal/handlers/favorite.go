@@ -12,14 +12,7 @@ import (
 )
 
 func AddFavorite(c *gin.Context) {
-	db := config.InitDB()
-
-	if db == nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Database connection error",
-		})
-		return
-	}
+	db := config.DB
 
 	userID, ok := utils.GetUserID(c)
 	if !ok {
@@ -68,14 +61,7 @@ func AddFavorite(c *gin.Context) {
 }
 
 func GetFavorites(c *gin.Context) {
-	db := config.InitDB()
-
-	if db == nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Database connection error",
-		})
-		return
-	}
+	db := config.DB
 
 	userID, ok := utils.GetUserID(c)
 	if !ok {
@@ -105,14 +91,7 @@ func GetFavorites(c *gin.Context) {
 }
 
 func DeleteFavorite(c *gin.Context) {
-	db := config.InitDB()
-
-	if db == nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Database connection error",
-		})
-		return
-	}
+	db := config.DB
 
 	userID, ok := utils.GetUserID(c)
 	if !ok {
@@ -151,14 +130,7 @@ func DeleteFavorite(c *gin.Context) {
 }
 
 func ClearFavorites(c *gin.Context) {
-	db := config.InitDB()
-
-	if db == nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Database connection error",
-		})
-		return
-	}
+	db := config.DB
 
 	userID, ok := utils.GetUserID(c)
 	if !ok {
@@ -182,14 +154,7 @@ func ClearFavorites(c *gin.Context) {
 }
 
 func CheckFavorite(c *gin.Context) {
-	db := config.InitDB()
-
-	if db == nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Database connection error",
-		})
-		return
-	}
+	db := config.DB
 
 	userID, ok := utils.GetUserID(c)
 	if !ok {

@@ -11,13 +11,7 @@ import (
 )
 
 func GetCategories(c *gin.Context) {
-	db := config.InitDB()
-	if db == nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Database connection error",
-		})
-		return
-	}
+	db := config.DB
 
 	var categories []models.Category
 	if err := db.Find(&categories).Error; err != nil {
@@ -33,13 +27,7 @@ func GetCategories(c *gin.Context) {
 }
 
 func GetCategory(c *gin.Context) {
-	db := config.InitDB()
-	if db == nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Database connection error",
-		})
-		return
-	}
+	db := config.DB
 
 	id := c.Param("id")
 	var category models.Category
@@ -64,13 +52,7 @@ func GetCategory(c *gin.Context) {
 
 // admin
 func CreateCategory(c *gin.Context) {
-	db := config.InitDB()
-	if db == nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Database connection error",
-		})
-		return
-	}
+	db := config.DB
 
 	var category models.Category
 	if err := c.ShouldBindJSON(&category); err != nil {
@@ -93,13 +75,7 @@ func CreateCategory(c *gin.Context) {
 }
 
 func DeleteCategory(c *gin.Context) {
-	db := config.InitDB()
-	if db == nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Database connection error",
-		})
-		return
-	}
+	db := config.DB
 	id := c.Param("id")
 	var category models.Category
 
@@ -128,13 +104,7 @@ func DeleteCategory(c *gin.Context) {
 }
 
 func UpdateCategory(c *gin.Context) {
-	db := config.InitDB()
-	if db == nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Database connection error",
-		})
-		return
-	}
+	db := config.DB
 
 	id := c.Param("id")
 

@@ -3,6 +3,7 @@ package handlers
 import (
 	"alexbirbirdev/go-shop/config"
 	"alexbirbirdev/go-shop/internal/models"
+	"alexbirbirdev/go-shop/internal/utils"
 	"errors"
 	"net/http"
 
@@ -11,13 +12,7 @@ import (
 )
 
 func CreateCartItem(c *gin.Context) {
-	db := config.InitDB()
-	if db == nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Database connection failed",
-		})
-		return
-	}
+	db := config.DB
 
 	var cartItem models.CartItem
 
@@ -28,7 +23,15 @@ func CreateCartItem(c *gin.Context) {
 		return
 	}
 
-	cartItem.UserID = 1 // Assuming a logged-in user with ID 1
+	userID, ok := utils.GetUserID(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "Unauthorized",
+		})
+		return
+	}
+
+	cartItem.UserID = userID // Assuming a logged-in user with ID 1
 	var existingCartItem models.CartItem
 	if err := db.Where("user_id = ? AND product_id = ? AND product_variant_id = ?", cartItem.UserID, cartItem.ProductID, cartItem.ProductVariantID).First(&existingCartItem).Error; err == nil {
 		existingCartItem.Quantity += cartItem.Quantity
@@ -51,15 +54,16 @@ func CreateCartItem(c *gin.Context) {
 }
 
 func GetCartItems(c *gin.Context) {
-	db := config.InitDB()
-	if db == nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Database connection failed",
+	db := config.DB
+	userID, ok := utils.GetUserID(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "Unauthorized",
 		})
 		return
 	}
 	var cartItems []models.CartItem
-	if err := db.Preload("Product").Preload("ProductVariant").Where("user_id = ?", 1).Find(&cartItems).Error; err != nil {
+	if err := db.Preload("Product").Preload("ProductVariant").Where("user_id = ?", userID).Find(&cartItems).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Failed to fetch cart items",
 		})
@@ -78,10 +82,12 @@ func GetCartItems(c *gin.Context) {
 }
 
 func DeleteCartItem(c *gin.Context) {
-	db := config.InitDB()
-	if db == nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Database connection failed",
+	db := config.DB
+
+	userID, ok := utils.GetUserID(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "Unauthorized",
 		})
 		return
 	}
@@ -89,7 +95,7 @@ func DeleteCartItem(c *gin.Context) {
 	id := c.Param("id")
 	var cartItem models.CartItem
 
-	if err := db.Where("id = ? AND user_id = ?", id, 1).First(&cartItem).Error; err != nil {
+	if err := db.Where("id = ? AND user_id = ?", id, userID).First(&cartItem).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{
 				"error": "Cart item not found",
@@ -102,7 +108,7 @@ func DeleteCartItem(c *gin.Context) {
 		return
 	}
 
-	if err := db.Where("id = ? AND user_id = ?", id, 1).Delete(&cartItem).Error; err != nil {
+	if err := db.Where("id = ? AND user_id = ?", id, userID).Delete(&cartItem).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Failed to delete cart item",
 		})
@@ -114,18 +120,19 @@ func DeleteCartItem(c *gin.Context) {
 }
 
 func ClearCart(c *gin.Context) {
-	db := config.InitDB()
-	if db == nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Database connection failed",
+	db := config.DB
+
+	userID, ok := utils.GetUserID(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "Unauthorized",
 		})
 		return
 	}
 
-	user_id := 1 // Assuming a logged-in user with ID 1
 	var cart []models.CartItem
 
-	if err := db.Where("user_id = ?", user_id).Find(&cart).Error; err != nil {
+	if err := db.Where("user_id = ?", userID).Find(&cart).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{
 				"error": "Cart item not found",
@@ -138,28 +145,31 @@ func ClearCart(c *gin.Context) {
 		return
 	}
 
-	if err := db.Where("user_id = ?", user_id).Delete(&cart).Error; err != nil {
+	if err := db.Where("user_id = ?", userID).Delete(&cart).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Failed to delete cart item",
 		})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{
-		"message": "Clear Cart",
+		"message": "Cleared",
 	})
 }
 
 func UpdateQuantity(c *gin.Context) {
-	db := config.InitDB()
-	if db == nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Database connection failed",
+	db := config.DB
+
+	userID, ok := utils.GetUserID(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "Unauthorized",
 		})
 		return
 	}
+
 	id := c.Param("id")
 	var cartItem models.CartItem
-	if err := db.Where("id = ? AND user_id = ?", id, 1).First(&cartItem).Error; err != nil {
+	if err := db.Where("id = ? AND user_id = ?", id, userID).First(&cartItem).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{
 				"error": "Cart item not found",
@@ -211,16 +221,19 @@ func UpdateQuantity(c *gin.Context) {
 }
 
 func IncrementCartItem(c *gin.Context) {
-	db := config.InitDB()
-	if db == nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Database connection failed",
+	db := config.DB
+
+	userID, ok := utils.GetUserID(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "Unauthorized",
 		})
 		return
 	}
+
 	id := c.Param("id")
 	var cartItem models.CartItem
-	if err := db.Where("id = ? AND user_id = ?", id, 1).First(&cartItem).Error; err != nil {
+	if err := db.Where("id = ? AND user_id = ?", id, userID).First(&cartItem).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{
 				"error": "Cart item not found",
@@ -265,16 +278,19 @@ func IncrementCartItem(c *gin.Context) {
 }
 
 func DecrementCartItem(c *gin.Context) {
-	db := config.InitDB()
-	if db == nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Database connection failed",
+	db := config.DB
+
+	userID, ok := utils.GetUserID(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "Unauthorized",
 		})
 		return
 	}
+
 	id := c.Param("id")
 	var cartItem models.CartItem
-	if err := db.Where("id = ? AND user_id = ?", id, 1).First(&cartItem).Error; err != nil {
+	if err := db.Where("id = ? AND user_id = ?", id, userID).First(&cartItem).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{
 				"error": "Cart item not found",

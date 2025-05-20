@@ -3,7 +3,7 @@ package handlers
 import (
 	"alexbirbirdev/go-shop/config"
 	"alexbirbirdev/go-shop/internal/models"
-	"alexbirbirdev/go-shop/internal/services/auth"
+	"alexbirbirdev/go-shop/internal/utils"
 	"errors"
 	"net/http"
 
@@ -17,18 +17,11 @@ type UserProfileResponse struct {
 }
 
 func GetUserProfile(c *gin.Context) {
-	db := config.InitDB()
-	if db == nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Database connection error",
-		})
-		return
-	}
-	userID, err := auth.GetUserIDFromCookie(c)
-
-	if err != nil {
+	db := config.DB
+	userID, ok := utils.GetUserID(c)
+	if !ok {
 		c.JSON(http.StatusUnauthorized, gin.H{
-			"error": "Unauthorized - " + err.Error(),
+			"error": "Unauthorized",
 		})
 		return
 	}
@@ -58,19 +51,12 @@ func GetUserProfile(c *gin.Context) {
 }
 
 func UpdateUserProfile(c *gin.Context) {
-	db := config.InitDB()
-	if db == nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Database connection error",
-		})
-		return
-	}
+	db := config.DB
 
-	userID, err := auth.GetUserIDFromCookie(c)
-
-	if err != nil {
+	userID, ok := utils.GetUserID(c)
+	if !ok {
 		c.JSON(http.StatusUnauthorized, gin.H{
-			"error": "Unauthorized - " + err.Error(),
+			"error": "Unauthorized",
 		})
 		return
 	}
@@ -120,13 +106,7 @@ func UpdateUserProfile(c *gin.Context) {
 
 // admin
 func AdminGetUsers(c *gin.Context) {
-	db := config.InitDB()
-	if db == nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Database connection error",
-		})
-		return
-	}
+	db := config.DB
 
 	var users []models.User
 
@@ -142,13 +122,7 @@ func AdminGetUsers(c *gin.Context) {
 	})
 }
 func AdminGetUser(c *gin.Context) {
-	db := config.InitDB()
-	if db == nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Database connection error",
-		})
-		return
-	}
+	db := config.DB
 
 	id := c.Param("id")
 
@@ -173,13 +147,7 @@ func AdminGetUser(c *gin.Context) {
 }
 
 func AdminUpdateUser(c *gin.Context) {
-	db := config.InitDB()
-	if db == nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Database connection error",
-		})
-		return
-	}
+	db := config.DB
 
 	id := c.Param("id")
 
