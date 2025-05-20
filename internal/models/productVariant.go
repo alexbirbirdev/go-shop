@@ -57,6 +57,7 @@ func updateProductAggregates(tx *gorm.DB, productID uint) error {
 type ProductVariant struct {
 	gorm.Model
 	ProductID uint    `json:"product_id" gorm:"not null;index:idx_product_id_name,unique"`
+	Product   Product `gorm:"foreignKey:ProductID"`
 	Name      string  `json:"name" gorm:"index:idx_product_id_name,unique"`
 	Stock     int     `json:"stock" gorm:"not null"`
 	Price     float64 `json:"price" gorm:"not null"`

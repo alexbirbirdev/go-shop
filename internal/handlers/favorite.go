@@ -6,6 +6,7 @@ import (
 	"alexbirbirdev/go-shop/internal/utils"
 	"errors"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -23,7 +24,7 @@ func AddFavorite(c *gin.Context) {
 	}
 
 	var input struct {
-		ProductID uint `json:"product_id" binding:"required"`
+		ProductVariantID uint `json:"product_variant_id" binding:"required"`
 	}
 
 	if err := c.ShouldBindJSON(&input); err != nil {
@@ -34,11 +35,11 @@ func AddFavorite(c *gin.Context) {
 	}
 
 	favorite := models.Favorite{
-		UserID:    uint(userID),
-		ProductID: input.ProductID,
+		UserID:           uint(userID),
+		ProductVariantID: input.ProductVariantID,
 	}
 	var existing models.Favorite
-	if err := db.Where("user_id = ? AND product_id = ?", userID, input.ProductID).First(&existing).Error; err == nil {
+	if err := db.Where("user_id = ? AND product_variant_id = ?", userID, input.ProductVariantID).First(&existing).Error; err == nil {
 		c.JSON(http.StatusConflict, gin.H{
 			"error": "Favorite already exists",
 		})
@@ -71,22 +72,67 @@ func GetFavorites(c *gin.Context) {
 		return
 	}
 
+	limitStr := c.DefaultQuery("limit", "20")
+	pageStr := c.DefaultQuery("page", "1")
+
+	page, err := strconv.Atoi(pageStr)
+	if err != nil || page < 1 {
+		page = 1
+	}
+	limit, err := strconv.Atoi(limitStr)
+	if err != nil || limit < 1 {
+		limit = 20
+	}
+	offset := (page - 1) * limit
+	sortParam := c.DefaultQuery("sort", "created_desc")
+	var sortBy string
+	switch sortParam {
+	case "created_asc":
+		sortBy = "created_at ASC"
+	case "created_desc":
+		fallthrough
+	default:
+		sortBy = "created_at DESC"
+	}
+
 	var favorites []models.Favorite
 
-	if err := db.Preload("Product").Where("user_id = ?", userID).Find(&favorites).Error; err != nil {
+	if err := db.Offset(offset).Limit(limit).Order(sortBy).Where("user_id = ?", userID).Preload("ProductVariant").Preload("ProductVariant.Product").Find(&favorites).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Failed to retrieve favorites",
 		})
 		return
 	}
-
-	var products []models.Product
+	type FavoriteResponse struct {
+		ID   uint   `json:"product_id"`
+		Name string `json:"name"`
+		// Description string  `json:"description"`
+		Image       string  `json:"image"`
+		Price       float64 `json:"price"`
+		Stock       int     `json:"stock"`
+		VariantName string  `json:"variant_name"`
+		VariantID   uint    `json:"variant_id"`
+		IsActive    bool    `json:"is_active"`
+	}
+	var response []FavoriteResponse
 	for _, fav := range favorites {
-		products = append(products, fav.Product)
+		p := fav.ProductVariant.Product
+		v := fav.ProductVariant
+		response = append(response, FavoriteResponse{
+			ID:   p.ID,
+			Name: p.Name,
+			// Description: p.Description,
+			Image:       p.Image,
+			Price:       v.Price,
+			Stock:       v.Stock,
+			VariantName: v.Name,
+			VariantID:   v.ID,
+			IsActive:    v.IsActive,
+		})
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"favorites": products,
+		"favorites": response,
 	})
 }
 
@@ -104,7 +150,7 @@ func DeleteFavorite(c *gin.Context) {
 	favoriteID := c.Param("id")
 
 	var favorite models.Favorite
-	if err := db.Where("user_id = ? AND product_id = ?", userID, favoriteID).First(&favorite).Error; err != nil {
+	if err := db.Where("user_id = ? AND product_variant_id = ?", userID, favoriteID).First(&favorite).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{
 				"error": "Favorite not found",
@@ -167,7 +213,7 @@ func CheckFavorite(c *gin.Context) {
 	productID := c.Param("id")
 
 	var favorite models.Favorite
-	if err := db.Where("user_id = ? AND product_id = ?", userID, productID).First(&favorite).Error; err != nil {
+	if err := db.Where("user_id = ? AND product_variant_id = ?", userID, productID).First(&favorite).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			c.JSON(http.StatusOK, gin.H{
 				"exists": false,
