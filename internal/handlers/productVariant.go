@@ -11,49 +11,6 @@ import (
 	"gorm.io/gorm"
 )
 
-func CreateProductVariant(c *gin.Context) {
-	db := config.InitDB()
-	if db == nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Database connection error",
-		})
-		return
-	}
-
-	id := c.Param("id")
-	var products []models.Product
-	if err := db.First(&products, id).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Failed to fetch product",
-		})
-		return
-	}
-
-	var variant models.ProductVariant
-
-	if err := c.ShouldBindJSON(&variant); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "Invalid input",
-		})
-		return
-	}
-
-	variant.ProductID = products[0].ID
-
-	if err := db.Create(&variant).Error; err != nil {
-		if strings.Contains(err.Error(), "duplicate") {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Variant with this name already exists for the product"})
-			return
-		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create variant"})
-		return
-	}
-
-	c.JSON(http.StatusCreated, gin.H{
-		"message": "Product variant created",
-	})
-}
-
 func GetProductVariants(c *gin.Context) {
 	db := config.InitDB()
 	if db == nil {
@@ -103,6 +60,50 @@ func GetProductVariant(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{
 		"variant": variant,
+	})
+}
+
+// admin
+func CreateProductVariant(c *gin.Context) {
+	db := config.InitDB()
+	if db == nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Database connection error",
+		})
+		return
+	}
+
+	id := c.Param("id")
+	var products []models.Product
+	if err := db.First(&products, id).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to fetch product",
+		})
+		return
+	}
+
+	var variant models.ProductVariant
+
+	if err := c.ShouldBindJSON(&variant); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Invalid input",
+		})
+		return
+	}
+
+	variant.ProductID = products[0].ID
+
+	if err := db.Create(&variant).Error; err != nil {
+		if strings.Contains(err.Error(), "duplicate") {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Variant with this name already exists for the product"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create variant"})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{
+		"message": "Product variant created",
 	})
 }
 

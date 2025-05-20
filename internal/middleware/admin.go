@@ -11,7 +11,7 @@ func AdminOnly() gin.HandlerFunc {
 		role, exists := c.Get("role")
 		if !exists || role != "admin" {
 			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{
-				"error": "Access denied",
+				"error": role,
 			})
 			return
 		}

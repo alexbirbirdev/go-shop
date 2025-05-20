@@ -130,6 +130,7 @@ func GetProduct(c *gin.Context) {
 	})
 }
 
+// admin
 func CreateProduct(c *gin.Context) {
 	var product models.Product
 	if err := c.ShouldBindJSON(&product); err != nil {
@@ -148,7 +149,6 @@ func CreateProduct(c *gin.Context) {
 	}
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "Product created",
-		"product": product,
 	})
 }
 

@@ -10,35 +10,6 @@ import (
 	"gorm.io/gorm"
 )
 
-func CreateCategory(c *gin.Context) {
-	db := config.InitDB()
-	if db == nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Database connection error",
-		})
-		return
-	}
-
-	var category models.Category
-	if err := c.ShouldBindJSON(&category); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "Invalid input",
-		})
-		return
-	}
-
-	if err := db.Create(&category).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Failed to create category",
-		})
-		return
-	}
-
-	c.JSON(http.StatusCreated, gin.H{
-		"message": "Category created",
-	})
-}
-
 func GetCategories(c *gin.Context) {
 	db := config.InitDB()
 	if db == nil {
@@ -88,6 +59,36 @@ func GetCategory(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"category": category,
+	})
+}
+
+// admin
+func CreateCategory(c *gin.Context) {
+	db := config.InitDB()
+	if db == nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Database connection error",
+		})
+		return
+	}
+
+	var category models.Category
+	if err := c.ShouldBindJSON(&category); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Invalid input",
+		})
+		return
+	}
+
+	if err := db.Create(&category).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to create category",
+		})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{
+		"message": "Category created",
 	})
 }
 

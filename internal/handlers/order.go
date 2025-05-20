@@ -157,3 +157,108 @@ func GetOrder(c *gin.Context) {
 		"order": order,
 	})
 }
+
+// admin
+func AdminGetOrders(c *gin.Context) {
+	db := config.InitDB()
+	if db == nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Database connection failed",
+		})
+		return
+	}
+
+	var orders []models.Order
+	if err := db.Preload("OrderItems").Find(&orders).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to fetch orders",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"orders": orders,
+	})
+}
+
+func AdminGetOrder(c *gin.Context) {
+	db := config.InitDB()
+	if db == nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Database connection failed",
+		})
+		return
+	}
+
+	id := c.Param("id")
+
+	var order models.Order
+
+	if err := db.Preload("OrderItems").Where("id = ?", id).Find(&order).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{
+				"error": "Order not found",
+			})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to fetch order",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"order": order,
+	})
+}
+
+func UpdateOrderStatus(c *gin.Context) {
+	db := config.InitDB()
+	if db == nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Database connection failed",
+		})
+		return
+	}
+
+	id := c.Param("id")
+	var order models.Order
+
+	if err := db.Where("id = ?", id).First(&order).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{
+				"error": "Order not found",
+			})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to fetch order",
+		})
+		return
+	}
+
+	// pending | paid | shipped | delivered | cancelled
+	var input struct {
+		Status string `json:"status"`
+	}
+
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Invalid input",
+		})
+		return
+	}
+
+	order.Status = input.Status
+
+	if err := db.Save(&order).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to update order status",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Order status updated successfully",
+	})
+}

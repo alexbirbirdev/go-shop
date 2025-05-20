@@ -31,6 +31,7 @@ func AuthMiddleware() gin.HandlerFunc {
 	}
 }
 
+// Проверяем, что пользователь не авторизован
 func AuthRequired(c *gin.Context) {
 	// Проверяем наличие токена в заголовке или cookies
 	tokenString := c.GetHeader("Authorization")
