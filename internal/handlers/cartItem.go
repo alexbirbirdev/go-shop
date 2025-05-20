@@ -63,7 +63,7 @@ func GetCartItems(c *gin.Context) {
 		return
 	}
 	var cartItems []models.CartItem
-	if err := db.Preload("Product").Preload("ProductVariant").Where("user_id = ?", userID).Find(&cartItems).Error; err != nil {
+	if err := db.Preload("Product").Preload("ProductVariants").Where("user_id = ?", userID).Find(&cartItems).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Failed to fetch cart items",
 		})

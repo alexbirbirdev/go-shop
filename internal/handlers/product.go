@@ -121,7 +121,7 @@ func GetProduct(c *gin.Context) {
 	db := config.DB
 
 	var product models.Product
-	if err := db.First(&product, id).Error; err != nil {
+	if err := db.Preload("ProductVariants").First(&product, id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{
 				"error": "Product not found",
@@ -134,25 +134,44 @@ func GetProduct(c *gin.Context) {
 		})
 		return
 	}
-	type ProductResponse struct {
-		ID          uint                    `json:"id"`
-		Name        string                  `json:"name"`
-		Description string                  `json:"description"`
-		Price       float64                 `json:"price"`
-		Image       string                  `json:"image"`
-		CategoryID  uint                    `json:"category_id"`
-		Stock       int                     `json:"stock"`
-		Variants    []models.ProductVariant `json:"variants"`
+	type VariantResponse struct {
+		ID    uint    `json:"id"`
+		Name  string  `json:"name"`
+		Stock int     `json:"stock"`
+		Price float64 `json:"price"`
 	}
+
+	type ProductResponse struct {
+		ID              uint              `json:"id"`
+		Name            string            `json:"name"`
+		Description     string            `json:"description"`
+		Price           float64           `json:"price"`
+		Image           string            `json:"image"`
+		CategoryID      uint              `json:"category_id"`
+		Stock           int               `json:"stock"`
+		ProductVariants []VariantResponse `json:"product_variants"`
+	}
+
+	// Собираем варианты
+	var variants []VariantResponse
+	for _, v := range product.ProductVariants {
+		variants = append(variants, VariantResponse{
+			ID:    v.ID,
+			Name:  v.Name,
+			Stock: v.Stock,
+			Price: v.Price,
+		})
+	}
+
 	result := ProductResponse{
-		ID:          product.ID,
-		Name:        product.Name,
-		Description: product.Description,
-		Price:       product.Price,
-		Image:       product.Image,
-		CategoryID:  product.CategoryID,
-		Stock:       product.Stock,
-		Variants:    product.Variants,
+		ID:              product.ID,
+		Name:            product.Name,
+		Description:     product.Description,
+		Price:           product.Price,
+		Image:           product.Image,
+		CategoryID:      product.CategoryID,
+		Stock:           product.Stock,
+		ProductVariants: variants,
 	}
 
 	c.JSON(http.StatusOK, gin.H{
@@ -339,7 +358,7 @@ func AdminGetProduct(c *gin.Context) {
 	db := config.DB
 
 	var product models.Product
-	if err := db.First(&product, id).Error; err != nil {
+	if err := db.Preload("ProductVariants").First(&product, id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{
 				"error": "Product not found",
