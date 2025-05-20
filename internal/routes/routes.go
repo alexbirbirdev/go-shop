@@ -97,6 +97,9 @@ func SetupRoutes(r *gin.Engine) {
 		adminCategoryRoutes.DELETE("/:id", handlers.DeleteCategory)
 		adminCategoryRoutes.PUT("/:id", handlers.UpdateCategory)
 		adminCategoryRoutes.POST("/", handlers.CreateCategory)
+		adminCategoryRoutes.GET("/", handlers.AdminGetCategories)
+		adminCategoryRoutes.GET("/:id", handlers.AdminGetCategory)
+		adminCategoryRoutes.GET("/all", handlers.ShowAllCategories)
 	}
 	adminOrdersRoutes := adminRoutes.Group("/orders")
 	{
