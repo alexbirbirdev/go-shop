@@ -20,61 +20,70 @@ func UploadProductImage(c *gin.Context) {
 
 	form, err := c.MultipartForm()
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "Failed to parse form data",
-		})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to parse form data"})
 		return
 	}
 
 	files := form.File["images"]
 	if len(files) == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "No files uploaded",
-		})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "No files uploaded"})
 		return
 	}
 
 	var product models.Product
 	if err := db.First(&product, productID).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{
-			"error": "Product not found",
-		})
+		c.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
+		return
+	}
+
+	var maxSortOrder int
+	if err := db.Model(&models.ProductImage{}).
+		Where("product_id = ?", productID).
+		Select("COALESCE(MAX(sort_order), 0)").
+		Scan(&maxSortOrder).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get current sort order"})
 		return
 	}
 
 	uploadBaseDir := os.Getenv("URL_UPLOAD_PRODUCT_IMAGE")
 	if uploadBaseDir == "" {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Failed to retrieve upload directory from environment",
-		})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Upload directory not configured"})
 		return
 	}
+
 	uploadDir := uploadBaseDir + productID
 	if err := os.MkdirAll(uploadDir, os.ModePerm); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Failed to create upload directory",
-		})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create upload directory"})
 		return
 	}
 
 	var images []models.ProductImage
 	var previewExists bool
+
+	var existingPreviewCount int64
+	if err := db.Model(&models.ProductImage{}).
+		Where("product_id = ? AND is_preview = ?", productID, true).
+		Count(&existingPreviewCount).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to check existing preview"})
+		return
+	}
+
 	for i, file := range files {
 		ext := filepath.Ext(file.Filename)
 		fileName := uuid.New().String() + ext
-		filePath := filepath.Join(uploadDir+"/", fileName)
+		filePath := filepath.Join(uploadDir, fileName)
 
 		if err := c.SaveUploadedFile(file, filePath); err != nil {
 			continue
 		}
 
-		isPreview := i == 0 && !previewExists
+		isPreview := i == 0 && existingPreviewCount == 0 && !previewExists
 
 		images = append(images, models.ProductImage{
 			ProductID: product.ID,
 			ImageURL:  uploadDir + "/" + fileName,
 			IsPreview: isPreview,
-			SortOrder: len(images),
+			SortOrder: maxSortOrder + 1 + i,
 		})
 
 		if isPreview {
@@ -82,12 +91,14 @@ func UploadProductImage(c *gin.Context) {
 		}
 	}
 
-	if err := db.Create(&images).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Failed to save images to database",
-		})
+	// Сохраняем в транзакции
+	tx := db.Begin()
+	if err := tx.Create(&images).Error; err != nil {
+		tx.Rollback()
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save images to database"})
 		return
 	}
+	tx.Commit()
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Images uploaded successfully",
@@ -146,16 +157,6 @@ func SetPreviewImage(c *gin.Context) {
 		tx.Rollback()
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Failed to update new preview image",
-		})
-		return
-	}
-
-	if err := tx.Model(&models.ProductImage{}).
-		Where("product_id = ? AND id NOT IN (?)", productID, []uint{newPreview.ID, oldPreview.ID}).
-		Update("sort_order", gorm.Expr("sort_order + 1")).Error; err != nil {
-		tx.Rollback()
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Failed to update sort order of other images",
 		})
 		return
 	}
