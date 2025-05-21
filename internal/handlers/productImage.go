@@ -3,11 +3,13 @@ package handlers
 import (
 	"alexbirbirdev/go-shop/config"
 	"alexbirbirdev/go-shop/internal/models"
+	"errors"
 	"net/http"
 	"os"
 	"path/filepath"
 
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 
 	"github.com/gin-gonic/gin"
 )
@@ -98,21 +100,67 @@ func SetPreviewImage(c *gin.Context) {
 	productID := c.Param("id")
 	imageID := c.Param("image_id")
 
-	// снимаем флаг активного изображения со всех изображений
-	if err := db.Model(&models.ProductImage{}).Where("product_id = ?", productID).Update("is_preview", false).Error; err != nil {
+	tx := db.Begin()
+
+	var oldPreview models.ProductImage
+	if err := db.Model(&models.ProductImage{}).
+		Where("product_id = ? AND is_preview = ?", productID, true).
+		First(&oldPreview).Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		tx.Rollback()
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Failed to update image preview status",
+			"error": "Failed to fetch old preview image",
 		})
 		return
 	}
 
-	// устанавливаем флаг активного изображения на выбранное изображение
-	if err := db.Model(&models.ProductImage{}).Where("product_id = ? AND id = ?", productID, imageID).Update("is_preview", true).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Failed to update image preview status",
+	var newPreview models.ProductImage
+	if err := db.Model(&models.ProductImage{}).
+		Where("product_id = ? AND id = ?", productID, imageID).
+		First(&newPreview).Error; err != nil {
+		tx.Rollback()
+		c.JSON(http.StatusNotFound, gin.H{
+			"error": "New preview image not found",
 		})
 		return
 	}
+
+	if oldPreview.ID != 0 {
+		if err := tx.Model(&oldPreview).
+			Updates(map[string]interface{}{
+				"is_preview": false,
+				"sort_order": newPreview.SortOrder,
+			}).Error; err != nil {
+			tx.Rollback()
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": "Failed to update old preview image",
+			})
+			return
+		}
+	}
+
+	if err := tx.Model(&newPreview).
+		Updates(map[string]interface{}{
+			"is_preview": true,
+			"sort_order": 0,
+		}).Error; err != nil {
+		tx.Rollback()
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to update new preview image",
+		})
+		return
+	}
+
+	if err := tx.Model(&models.ProductImage{}).
+		Where("product_id = ? AND id NOT IN (?)", productID, []uint{newPreview.ID, oldPreview.ID}).
+		Update("sort_order", gorm.Expr("sort_order + 1")).Error; err != nil {
+		tx.Rollback()
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to update sort order of other images",
+		})
+		return
+	}
+
+	tx.Commit()
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Preview image updated",
