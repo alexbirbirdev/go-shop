@@ -51,3 +51,23 @@ func AuthRequired(c *gin.Context) {
 	})
 	c.Abort()
 }
+
+func OptionalAuthMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		token, _ := c.Cookie("token")
+		// if err != nil {
+		// 	c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
+		// 		"error": "Unauthorized",
+		// 	})
+		// 	return
+		// }
+
+		claims, err := auth.ValidateJWT(token)
+		if err == nil {
+			c.Set("userID", claims.UserID)
+			c.Set("role", claims.Role)
+		}
+
+		c.Next()
+	}
+}

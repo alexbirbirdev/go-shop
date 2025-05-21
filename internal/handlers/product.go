@@ -3,6 +3,7 @@ package handlers
 import (
 	"alexbirbirdev/go-shop/config"
 	"alexbirbirdev/go-shop/internal/models"
+	"alexbirbirdev/go-shop/internal/utils"
 	"errors"
 	"net/http"
 	"strconv"
@@ -14,81 +15,107 @@ import (
 func GetProducts(c *gin.Context) {
 	db := config.DB
 
-	pageStr := c.DefaultQuery("page", "1")
-	limitStr := c.DefaultQuery("limit", "10")
+	_, limit, offset := getPaginationParams(c)
+	sortBy := getSortParam(c)
 
-	page, err := strconv.Atoi(pageStr)
-	if err != nil || page < 1 {
-		page = 1
-	}
-	limit, err := strconv.Atoi(limitStr)
-	if err != nil || limit < 1 {
-		limit = 10
-	}
+	// Базовый запрос с фильтрами
+	query := db.Model(&models.Product{}).
+		Where("is_active = ?", true).
+		Order(sortBy).
+		Limit(limit).
+		Offset(offset)
 
-	offset := (page - 1) * limit
+	applyFilters(c, query)
 
-	sortParam := c.DefaultQuery("sort", "created_desc")
+	userID, isAuth := utils.GetUserID(c)
 
-	var sortBy string
-	switch sortParam {
-
-	case "price_desc":
-		sortBy = "price DESC"
-	case "price_asc":
-		sortBy = "price ASC"
-	case "name_desc":
-		sortBy = "name DESC"
-	case "name_asc":
-		sortBy = "name ASC"
-	case "created_asc":
-		sortBy = "created_at ASC"
-	case "created_desc":
-		fallthrough
-	default:
-		sortBy = "created_at DESC"
+	// Сначала получаем все продукты без флагов
+	var baseProducts []models.Product
+	if err := query.Find(&baseProducts).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch products"})
+		return
 	}
 
-	categoryStr := c.Query("category")
-	priceMinStr := c.Query("price_min")
-	priceMaxStr := c.Query("price_max")
-
-	query := db.Model(&models.Product{})
-
-	if categoryStr != "" {
-		category, err := strconv.Atoi(categoryStr)
-		if err == nil {
-			query = query.Where("category_id = ?", category)
+	// Если пользователь авторизован, проверяем избранное и корзину
+	if isAuth {
+		// Получаем ID всех продуктов на странице
+		var productIDs []uint
+		for _, p := range baseProducts {
+			productIDs = append(productIDs, p.ID)
 		}
-	}
-	if priceMinStr != "" {
-		priceMin, err := strconv.ParseFloat(priceMinStr, 64)
-		if err == nil {
-			query = query.Where("price >= ?", priceMin)
+
+		// Получаем продукты в избранном
+		var favoriteProductIDs []uint
+		if len(productIDs) > 0 {
+			db.Model(&models.Favorite{}).
+				Select("DISTINCT pv.product_id").
+				Joins("JOIN product_variants pv ON pv.id = favorites.product_variant_id AND pv.is_active = true").
+				Where("favorites.user_id = ? AND pv.product_id IN (?)", userID, productIDs).
+				Pluck("pv.product_id", &favoriteProductIDs)
 		}
-	}
-	if priceMaxStr != "" {
-		priceMax, err := strconv.ParseFloat(priceMaxStr, 64)
-		if err == nil {
-			query = query.Where("price <= ?", priceMax)
+
+		// Получаем продукты в корзине
+		var cartProductIDs []uint
+		if len(productIDs) > 0 {
+			db.Model(&models.CartItem{}).
+				Select("DISTINCT pv.product_id").
+				Joins("JOIN product_variants pv ON pv.id = cart_items.product_variant_id AND pv.is_active = true").
+				Where("cart_items.user_id = ? AND pv.product_id IN (?)", userID, productIDs).
+				Pluck("pv.product_id", &cartProductIDs)
 		}
-	}
 
-	search := c.Query("search")
-	if search != "" {
-		query = query.Where("name ILIKE ? OR description ILIKE ?", "%"+search+"%", "%"+search+"%")
-	}
+		// Создаем мапы для быстрой проверки
+		favoriteMap := make(map[uint]bool)
+		for _, id := range favoriteProductIDs {
+			favoriteMap[id] = true
+		}
 
-	query = query.Order(sortBy).Limit(limit).Offset(offset).Where("is_active = ?", true)
+		cartMap := make(map[uint]bool)
+		for _, id := range cartProductIDs {
+			cartMap[id] = true
+		}
 
-	var products []models.Product
-	if err := query.Find(&products).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Failed to fetch products",
+		// Формируем ответ с флагами
+		type ProductResponse struct {
+			ID          uint    `json:"id"`
+			Name        string  `json:"name"`
+			Description string  `json:"description"`
+			Price       float64 `json:"price"`
+			Image       string  `json:"image"`
+			CategoryID  uint    `json:"category_id"`
+			Stock       int     `json:"stock"`
+			IsFavorite  *bool   `json:"is_favorite,omitempty"`
+			InCart      *bool   `json:"in_cart,omitempty"`
+		}
+
+		result := make([]ProductResponse, len(baseProducts))
+		for i, product := range baseProducts {
+			resp := ProductResponse{
+				ID:          product.ID,
+				Name:        product.Name,
+				Description: product.Description,
+				Price:       product.Price,
+				Image:       product.Image,
+				CategoryID:  product.CategoryID,
+				Stock:       product.Stock,
+			}
+
+			isFav := favoriteMap[product.ID]
+			inCart := cartMap[product.ID]
+
+			resp.IsFavorite = &isFav
+			resp.InCart = &inCart
+
+			result[i] = resp
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"products": result,
 		})
 		return
 	}
 
+	// Для неавторизованных пользователей
 	type ProductResponse struct {
 		ID          uint    `json:"id"`
 		Name        string  `json:"name"`
@@ -98,9 +125,10 @@ func GetProducts(c *gin.Context) {
 		CategoryID  uint    `json:"category_id"`
 		Stock       int     `json:"stock"`
 	}
-	var result []ProductResponse
-	for _, product := range products {
-		result = append(result, ProductResponse{
+
+	result := make([]ProductResponse, len(baseProducts))
+	for i, product := range baseProducts {
+		result[i] = ProductResponse{
 			ID:          product.ID,
 			Name:        product.Name,
 			Description: product.Description,
@@ -108,12 +136,69 @@ func GetProducts(c *gin.Context) {
 			Image:       product.Image,
 			CategoryID:  product.CategoryID,
 			Stock:       product.Stock,
-		})
+		}
 	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"products": result,
 	})
+}
+
+func getPaginationParams(c *gin.Context) (page, limit, offset int) {
+	pageStr := c.DefaultQuery("page", "1")
+	limitStr := c.DefaultQuery("limit", "10")
+
+	page, err := strconv.Atoi(pageStr)
+	if err != nil || page < 1 {
+		page = 1
+	}
+	limit, err = strconv.Atoi(limitStr)
+	if err != nil || limit < 1 {
+		limit = 10
+	}
+	offset = (page - 1) * limit
+	return
+}
+func getSortParam(c *gin.Context) string {
+	sortParam := c.DefaultQuery("sort", "created_desc")
+
+	switch sortParam {
+	case "price_desc":
+		return "price DESC"
+	case "price_asc":
+		return "price ASC"
+	case "name_desc":
+		return "name DESC"
+	case "name_asc":
+		return "name ASC"
+	case "created_asc":
+		return "created_at ASC"
+	default:
+		return "created_at DESC"
+	}
+}
+func applyFilters(c *gin.Context, query *gorm.DB) {
+	if categoryStr := c.Query("category"); categoryStr != "" {
+		if category, err := strconv.Atoi(categoryStr); err == nil {
+			query.Where("category_id = ?", category)
+		}
+	}
+
+	if priceMinStr := c.Query("price_min"); priceMinStr != "" {
+		if priceMin, err := strconv.ParseFloat(priceMinStr, 64); err == nil {
+			query.Where("price >= ?", priceMin)
+		}
+	}
+
+	if priceMaxStr := c.Query("price_max"); priceMaxStr != "" {
+		if priceMax, err := strconv.ParseFloat(priceMaxStr, 64); err == nil {
+			query.Where("price <= ?", priceMax)
+		}
+	}
+
+	if search := c.Query("search"); search != "" {
+		query.Where("name ILIKE ? OR description ILIKE ?", "%"+search+"%", "%"+search+"%")
+	}
 }
 
 func GetProduct(c *gin.Context) {
