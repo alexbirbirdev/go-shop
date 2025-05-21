@@ -24,7 +24,7 @@ func CreateOrder(c *gin.Context) {
 
 	var cartItems []models.CartItem
 
-	if err := db.Preload("Product").Preload("ProductVariants").Where("user_id = ?", userID).Find(&cartItems).Error; err != nil {
+	if err := db.Preload("ProductVariant").Preload("ProductVariant.Product").Where("user_id = ?", userID).Find(&cartItems).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Failed to fetch cart items",
 		})
@@ -70,6 +70,41 @@ func CreateOrder(c *gin.Context) {
 		return
 	}
 
+	// Обновляем количество на складе
+	for _, item := range orderItems {
+		var variant models.ProductVariant
+		if err := db.First(&variant, item.ProductVariantID).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				c.JSON(http.StatusNotFound, gin.H{
+					"error": "Product variant not found",
+				})
+				return
+			}
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": "Failed to fetch product variant",
+			})
+			return
+		}
+		if variant.Stock < item.Quantity {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": "Not enough stock for product variant",
+			})
+			return
+		}
+		variant.Stock -= item.Quantity
+
+		if variant.Stock == 0 {
+			variant.IsActive = false
+		}
+		if err := db.Save(&variant).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": "Failed to update product variant stock",
+			})
+			return
+		}
+	}
+
+	// Очищаем корзину после создания заказа
 	if err := db.Where("user_id = ?", userID).Delete(&cartItems).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Failed to clear cart",
@@ -78,7 +113,6 @@ func CreateOrder(c *gin.Context) {
 	}
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "Order created successfully",
-		"order":   order,
 	})
 }
 
@@ -94,7 +128,7 @@ func GetOrders(c *gin.Context) {
 	}
 
 	var orders []models.Order
-	if err := db.Preload("OrderItems").Where("user_id = ?", userID).Find(&orders).Error; err != nil {
+	if err := db.Order("created_at DESC").Preload("OrderItems").Where("user_id = ?", userID).Find(&orders).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Failed to fetch orders",
 		})

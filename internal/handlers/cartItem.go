@@ -94,7 +94,7 @@ func GetCartItems(c *gin.Context) {
 		return
 	}
 	var cartItems []models.CartItem
-	if err := db.Preload("ProductVariant").Preload("ProductVariant.Product").Where("user_id = ?", userID).Find(&cartItems).Error; err != nil {
+	if err := db.Order("created_at DESC").Preload("ProductVariant").Preload("ProductVariant.Product").Where("user_id = ?", userID).Find(&cartItems).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Failed to fetch cart items",
 		})
@@ -355,5 +355,36 @@ func DecrementCartItem(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Incremented quantity",
+	})
+}
+
+func CheckInCart(c *gin.Context) {
+	db := config.DB
+
+	userID, ok := utils.GetUserID(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "Unauthorized",
+		})
+		return
+	}
+
+	response := false
+	id := c.Param("id")
+	if err := db.Where("id = ? AND user_id = ?", id, userID).First(&models.CartItem{}).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{
+				"in_cart": response,
+			})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to fetch cart item",
+		})
+		return
+	}
+	response = true
+	c.JSON(http.StatusOK, gin.H{
+		"in_cart": response,
 	})
 }

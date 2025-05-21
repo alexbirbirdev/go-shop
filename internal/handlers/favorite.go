@@ -104,14 +104,14 @@ func GetFavorites(c *gin.Context) {
 		return
 	}
 	type FavoriteResponse struct {
-		ID   uint   `json:"product_id"`
-		Name string `json:"name"`
+		ID        uint   `json:"product_id"`
+		VariantID uint   `json:"variant_id"`
+		Name      string `json:"name"`
 		// Description string  `json:"description"`
 		Image       string  `json:"image"`
 		Price       float64 `json:"price"`
 		Stock       int     `json:"stock"`
 		VariantName string  `json:"variant_name"`
-		VariantID   uint    `json:"variant_id"`
 		IsActive    bool    `json:"is_active"`
 	}
 	var response []FavoriteResponse
