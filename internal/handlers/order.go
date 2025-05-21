@@ -24,7 +24,10 @@ func CreateOrder(c *gin.Context) {
 
 	var cartItems []models.CartItem
 
-	if err := db.Preload("ProductVariant").Preload("ProductVariant.Product").Where("user_id = ?", userID).Find(&cartItems).Error; err != nil {
+	if err := db.Preload("ProductVariant").
+		Preload("ProductVariant.Product").
+		Where("user_id = ?", userID).
+		Find(&cartItems).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Failed to fetch cart items",
 		})
@@ -128,7 +131,15 @@ func GetOrders(c *gin.Context) {
 	}
 
 	var orders []models.Order
-	if err := db.Order("created_at DESC").Preload("OrderItems").Where("user_id = ?", userID).Find(&orders).Error; err != nil {
+	if err := db.Order("created_at DESC").
+		Preload("OrderItems").
+		Preload("OrderItems.ProductVariant").
+		Preload("OrderItems.ProductVariant.Product").
+		Preload("OrderItems.ProductVariant.Product.Images", func(db *gorm.DB) *gorm.DB {
+			return db.Order("sort_order ASC")
+		}).
+		Where("user_id = ?", userID).
+		Find(&orders).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Failed to fetch orders",
 		})
@@ -155,7 +166,13 @@ func GetOrder(c *gin.Context) {
 
 	var order models.Order
 
-	if err := db.Preload("OrderItems").Where("user_id = ? AND id = ?", userID, id).Find(&order).Error; err != nil {
+	if err := db.Preload("OrderItems").
+		Preload("OrderItems.ProductVariant").
+		Preload("OrderItems.ProductVariant.Product").
+		Preload("OrderItems.ProductVariant.Product.Images", func(db *gorm.DB) *gorm.DB {
+			return db.Order("sort_order ASC")
+		}).
+		Where("user_id = ? AND id = ?", userID, id).Find(&order).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{
 				"error": "Order not found",

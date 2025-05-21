@@ -210,7 +210,11 @@ func GetProduct(c *gin.Context) {
 
 	// Получаем продукт с вариантами
 	var product models.Product
-	if err := db.Preload("ProductVariants", "is_active = ?", true).First(&product, id).Error; err != nil {
+	if err := db.Preload("ProductVariants", "is_active = ?", true).
+		Preload("Images", func(db *gorm.DB) *gorm.DB {
+			return db.Order("sort_order ASC")
+		}).
+		First(&product, id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
 			return
@@ -231,14 +235,14 @@ func GetProduct(c *gin.Context) {
 	}
 
 	type ProductResponse struct {
-		ID          uint    `json:"id"`
-		Name        string  `json:"name"`
-		Description string  `json:"description"`
-		Price       float64 `json:"price"`
-		// Image           string            `json:"image"`
-		CategoryID      uint              `json:"category_id"`
-		Stock           int               `json:"stock"`
-		ProductVariants []VariantResponse `json:"product_variants"`
+		ID              uint                  `json:"id"`
+		Name            string                `json:"name"`
+		Description     string                `json:"description"`
+		Price           float64               `json:"price"`
+		Images          []models.ProductImage `json:"images"`
+		CategoryID      uint                  `json:"category_id"`
+		Stock           int                   `json:"stock"`
+		ProductVariants []VariantResponse     `json:"product_variants"`
 	}
 
 	// Собираем варианты
@@ -305,11 +309,11 @@ func GetProduct(c *gin.Context) {
 	}
 
 	result := ProductResponse{
-		ID:          product.ID,
-		Name:        product.Name,
-		Description: product.Description,
-		Price:       product.Price,
-		// Image:           product.Image,
+		ID:              product.ID,
+		Name:            product.Name,
+		Description:     product.Description,
+		Price:           product.Price,
+		Images:          product.Images,
 		CategoryID:      product.CategoryID,
 		Stock:           product.Stock,
 		ProductVariants: variants,

@@ -97,7 +97,16 @@ func GetFavorites(c *gin.Context) {
 
 	var favorites []models.Favorite
 
-	if err := db.Offset(offset).Limit(limit).Order(sortBy).Where("user_id = ?", userID).Preload("ProductVariant").Preload("ProductVariant.Product").Find(&favorites).Error; err != nil {
+	if err := db.Offset(offset).
+		Limit(limit).
+		Order(sortBy).
+		Where("user_id = ?", userID).
+		Preload("ProductVariant.Product.Images", func(db *gorm.DB) *gorm.DB {
+			return db.Order("sort_order ASC") // Сортируем изображения по порядку
+		}).
+		Preload("ProductVariant").
+		Preload("ProductVariant.Product").
+		Find(&favorites).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Failed to retrieve favorites",
 		})
@@ -108,11 +117,11 @@ func GetFavorites(c *gin.Context) {
 		VariantID uint   `json:"variant_id"`
 		Name      string `json:"name"`
 		// Description string  `json:"description"`
-		// Image       string  `json:"image"`
-		Price       float64 `json:"price"`
-		Stock       int     `json:"stock"`
-		VariantName string  `json:"variant_name"`
-		IsActive    bool    `json:"is_active"`
+		Price       float64               `json:"price"`
+		Stock       int                   `json:"stock"`
+		VariantName string                `json:"variant_name"`
+		IsActive    bool                  `json:"is_active"`
+		Images      []models.ProductImage `json:"images"`
 	}
 	var response []FavoriteResponse
 	for _, fav := range favorites {
@@ -122,7 +131,7 @@ func GetFavorites(c *gin.Context) {
 			ID:   p.ID,
 			Name: p.Name,
 			// Description: p.Description,
-			// Image:       p.Image,
+			Images:      p.Images,
 			Price:       v.Price,
 			Stock:       v.Stock,
 			VariantName: v.Name,

@@ -94,7 +94,13 @@ func GetCartItems(c *gin.Context) {
 		return
 	}
 	var cartItems []models.CartItem
-	if err := db.Order("created_at DESC").Preload("ProductVariant").Preload("ProductVariant.Product").Where("user_id = ?", userID).Find(&cartItems).Error; err != nil {
+	if err := db.Order("created_at DESC").
+		Preload("ProductVariant").
+		Preload("ProductVariant.Product").
+		Preload("ProductVariant.Product.Images", func(db *gorm.DB) *gorm.DB {
+			return db.Order("sort_order ASC")
+		}).
+		Where("user_id = ?", userID).Find(&cartItems).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Failed to fetch cart items",
 		})
