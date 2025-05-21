@@ -6,6 +6,7 @@ import (
 	"alexbirbirdev/go-shop/internal/utils"
 	"errors"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -108,9 +109,36 @@ func UpdateUserProfile(c *gin.Context) {
 func AdminGetUsers(c *gin.Context) {
 	db := config.DB
 
+	pageStr := c.DefaultQuery("page", "1")
+	limitStr := c.DefaultQuery("limit", "10")
+	page, err := strconv.Atoi(pageStr)
+	if page < 1 || err != nil {
+		page = 1
+	}
+	limit, err := strconv.Atoi(limitStr)
+	if limit < 1 || err != nil {
+		limit = 50
+	}
+	offset := (page - 1) * limit
+
+	sortParam := c.DefaultQuery("sort", "name_ASC")
+	var sortBy string
+	switch sortParam {
+	case "name_desc":
+		sortBy = "name DESC"
+	case "name_asc":
+		sortBy = "name ASC"
+	case "created_asc":
+		sortBy = "created_at ASC"
+	case "created_desc":
+		fallthrough
+	default:
+		sortBy = "created_at DESC"
+	}
+
 	var users []models.User
 
-	if err := db.Find(&users).Error; err != nil {
+	if err := db.Order(sortBy).Limit(limit).Offset(offset).Find(&users).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Failed to retrieve users",
 		})
