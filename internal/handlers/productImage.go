@@ -102,7 +102,6 @@ func UploadProductImage(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Images uploaded successfully",
-		"images":  images,
 	})
 }
 

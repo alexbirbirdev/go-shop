@@ -21,6 +21,9 @@ func GetProducts(c *gin.Context) {
 	// Базовый запрос с фильтрами
 	query := db.Model(&models.Product{}).
 		Where("is_active = ?", true).
+		Preload("Images", func(db *gorm.DB) *gorm.DB {
+			return db.Order("sort_order ASC")
+		}).
 		Order(sortBy).
 		Limit(limit).
 		Offset(offset)
@@ -77,15 +80,15 @@ func GetProducts(c *gin.Context) {
 
 		// Формируем ответ с флагами
 		type ProductResponse struct {
-			ID          uint    `json:"id"`
-			Name        string  `json:"name"`
-			Description string  `json:"description"`
-			Price       float64 `json:"price"`
-			// Image       string  `json:"image"`
-			CategoryID uint  `json:"category_id"`
-			Stock      int   `json:"stock"`
-			IsFavorite *bool `json:"is_favorite,omitempty"`
-			InCart     *bool `json:"in_cart,omitempty"`
+			ID          uint                  `json:"id"`
+			Name        string                `json:"name"`
+			Description string                `json:"description"`
+			Price       float64               `json:"price"`
+			Images      []models.ProductImage `json:"images" gorm:"foreignKey:ProductID"`
+			CategoryID  uint                  `json:"category_id"`
+			Stock       int                   `json:"stock"`
+			IsFavorite  *bool                 `json:"is_favorite,omitempty"`
+			InCart      *bool                 `json:"in_cart,omitempty"`
 		}
 
 		result := make([]ProductResponse, len(baseProducts))
@@ -95,9 +98,9 @@ func GetProducts(c *gin.Context) {
 				Name:        product.Name,
 				Description: product.Description,
 				Price:       product.Price,
-				// Image:       product.Image,
-				CategoryID: product.CategoryID,
-				Stock:      product.Stock,
+				Images:      product.Images,
+				CategoryID:  product.CategoryID,
+				Stock:       product.Stock,
 			}
 
 			isFav := favoriteMap[product.ID]
@@ -117,13 +120,13 @@ func GetProducts(c *gin.Context) {
 
 	// Для неавторизованных пользователей
 	type ProductResponse struct {
-		ID          uint    `json:"id"`
-		Name        string  `json:"name"`
-		Description string  `json:"description"`
-		Price       float64 `json:"price"`
-		// Image       string  `json:"image"`
-		CategoryID uint `json:"category_id"`
-		Stock      int  `json:"stock"`
+		ID          uint                  `json:"id"`
+		Name        string                `json:"name"`
+		Description string                `json:"description"`
+		Price       float64               `json:"price"`
+		Images      []models.ProductImage `json:"images" gorm:"foreignKey:ProductID"`
+		CategoryID  uint                  `json:"category_id"`
+		Stock       int                   `json:"stock"`
 	}
 
 	result := make([]ProductResponse, len(baseProducts))
@@ -133,9 +136,9 @@ func GetProducts(c *gin.Context) {
 			Name:        product.Name,
 			Description: product.Description,
 			Price:       product.Price,
-			// Image:       product.Image,
-			CategoryID: product.CategoryID,
-			Stock:      product.Stock,
+			Images:      product.Images,
+			CategoryID:  product.CategoryID,
+			Stock:       product.Stock,
 		}
 	}
 
