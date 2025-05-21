@@ -87,7 +87,10 @@ func SetupRoutes(r *gin.Engine) {
 		adminProductRoutes.POST("/", handlers.CreateProduct)
 		adminProductRoutes.PUT("/:id", handlers.UpdateProduct)
 		adminProductRoutes.POST("/:id/variants", handlers.CreateProductVariant)
+		// Product images
 		adminProductRoutes.POST("/:id/images", handlers.UploadProductImage)
+		adminProductRoutes.PUT("/:id/images/:image_id", handlers.SetPreviewImage)
+		adminProductRoutes.PUT("/:id/images/order", handlers.UpdateImageOrder)
 	}
 	adminProductVariantRoutes := adminRoutes.Group("/variants")
 	{

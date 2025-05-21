@@ -92,3 +92,60 @@ func UploadProductImage(c *gin.Context) {
 		"images":  images,
 	})
 }
+
+func SetPreviewImage(c *gin.Context) {
+	db := config.DB
+	productID := c.Param("id")
+	imageID := c.Param("image_id")
+
+	// снимаем флаг активного изображения со всех изображений
+	if err := db.Model(&models.ProductImage{}).Where("product_id = ?", productID).Update("is_preview", false).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to update image preview status",
+		})
+		return
+	}
+
+	// устанавливаем флаг активного изображения на выбранное изображение
+	if err := db.Model(&models.ProductImage{}).Where("product_id = ? AND id = ?", productID, imageID).Update("is_preview", true).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to update image preview status",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Preview image updated",
+	})
+}
+
+func UpdateImageOrder(c *gin.Context) {
+	db := config.DB
+	productID := c.Param("id")
+
+	var input struct {
+		ImageIDs []uint `json:"image_ids"`
+	}
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Invalid input - " + err.Error(),
+		})
+		return
+	}
+
+	tx := db.Begin()
+	for order, imageID := range input.ImageIDs {
+		if err := tx.Model(&models.ProductImage{}).Where("product_id = ? AND id = ?", productID, imageID).Update("sort_order", order).Error; err != nil {
+			tx.Rollback()
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": "Failed to update image order",
+			})
+			return
+		}
+	}
+	tx.Commit()
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Image order updated successfully",
+	})
+}
