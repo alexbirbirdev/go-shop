@@ -81,11 +81,11 @@ func GetProducts(c *gin.Context) {
 			Name        string  `json:"name"`
 			Description string  `json:"description"`
 			Price       float64 `json:"price"`
-			Image       string  `json:"image"`
-			CategoryID  uint    `json:"category_id"`
-			Stock       int     `json:"stock"`
-			IsFavorite  *bool   `json:"is_favorite,omitempty"`
-			InCart      *bool   `json:"in_cart,omitempty"`
+			// Image       string  `json:"image"`
+			CategoryID uint  `json:"category_id"`
+			Stock      int   `json:"stock"`
+			IsFavorite *bool `json:"is_favorite,omitempty"`
+			InCart     *bool `json:"in_cart,omitempty"`
 		}
 
 		result := make([]ProductResponse, len(baseProducts))
@@ -95,9 +95,9 @@ func GetProducts(c *gin.Context) {
 				Name:        product.Name,
 				Description: product.Description,
 				Price:       product.Price,
-				Image:       product.Image,
-				CategoryID:  product.CategoryID,
-				Stock:       product.Stock,
+				// Image:       product.Image,
+				CategoryID: product.CategoryID,
+				Stock:      product.Stock,
 			}
 
 			isFav := favoriteMap[product.ID]
@@ -121,9 +121,9 @@ func GetProducts(c *gin.Context) {
 		Name        string  `json:"name"`
 		Description string  `json:"description"`
 		Price       float64 `json:"price"`
-		Image       string  `json:"image"`
-		CategoryID  uint    `json:"category_id"`
-		Stock       int     `json:"stock"`
+		// Image       string  `json:"image"`
+		CategoryID uint `json:"category_id"`
+		Stock      int  `json:"stock"`
 	}
 
 	result := make([]ProductResponse, len(baseProducts))
@@ -133,9 +133,9 @@ func GetProducts(c *gin.Context) {
 			Name:        product.Name,
 			Description: product.Description,
 			Price:       product.Price,
-			Image:       product.Image,
-			CategoryID:  product.CategoryID,
-			Stock:       product.Stock,
+			// Image:       product.Image,
+			CategoryID: product.CategoryID,
+			Stock:      product.Stock,
 		}
 	}
 
@@ -228,11 +228,11 @@ func GetProduct(c *gin.Context) {
 	}
 
 	type ProductResponse struct {
-		ID              uint              `json:"id"`
-		Name            string            `json:"name"`
-		Description     string            `json:"description"`
-		Price           float64           `json:"price"`
-		Image           string            `json:"image"`
+		ID          uint    `json:"id"`
+		Name        string  `json:"name"`
+		Description string  `json:"description"`
+		Price       float64 `json:"price"`
+		// Image           string            `json:"image"`
 		CategoryID      uint              `json:"category_id"`
 		Stock           int               `json:"stock"`
 		ProductVariants []VariantResponse `json:"product_variants"`
@@ -302,11 +302,11 @@ func GetProduct(c *gin.Context) {
 	}
 
 	result := ProductResponse{
-		ID:              product.ID,
-		Name:            product.Name,
-		Description:     product.Description,
-		Price:           product.Price,
-		Image:           product.Image,
+		ID:          product.ID,
+		Name:        product.Name,
+		Description: product.Description,
+		Price:       product.Price,
+		// Image:           product.Image,
 		CategoryID:      product.CategoryID,
 		Stock:           product.Stock,
 		ProductVariants: variants,

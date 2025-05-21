@@ -108,7 +108,7 @@ func GetFavorites(c *gin.Context) {
 		VariantID uint   `json:"variant_id"`
 		Name      string `json:"name"`
 		// Description string  `json:"description"`
-		Image       string  `json:"image"`
+		// Image       string  `json:"image"`
 		Price       float64 `json:"price"`
 		Stock       int     `json:"stock"`
 		VariantName string  `json:"variant_name"`
@@ -122,7 +122,7 @@ func GetFavorites(c *gin.Context) {
 			ID:   p.ID,
 			Name: p.Name,
 			// Description: p.Description,
-			Image:       p.Image,
+			// Image:       p.Image,
 			Price:       v.Price,
 			Stock:       v.Stock,
 			VariantName: v.Name,

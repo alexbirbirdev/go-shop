@@ -31,6 +31,7 @@ func InitDB() *gorm.DB {
 		&models.Order{},
 		&models.OrderItem{},
 		&models.UserAddress{},
+		&models.ProductImage{},
 	)
 
 	return DB
