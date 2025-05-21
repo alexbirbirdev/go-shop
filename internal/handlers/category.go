@@ -289,8 +289,35 @@ func AdminGetCategory(c *gin.Context) {
 func ShowAllCategories(c *gin.Context) {
 	db := config.DB
 
+	pageStr := c.DefaultQuery("page", "1")
+	limitStr := c.DefaultQuery("limit", "10")
+	page, err := strconv.Atoi(pageStr)
+	if page < 1 || err != nil {
+		page = 1
+	}
+	limit, err := strconv.Atoi(limitStr)
+	if limit < 1 || err != nil {
+		limit = 50
+	}
+	offset := (page - 1) * limit
+
+	sortParam := c.DefaultQuery("sort", "name_ASC")
+	var sortBy string
+	switch sortParam {
+	case "created_asc":
+		sortBy = "created_at ASC"
+	case "created_desc":
+		sortBy = "created_at DESC"
+	case "name_desc":
+		sortBy = "name DESC"
+	case "name_asc":
+		fallthrough
+	default:
+		sortBy = "name ASC"
+	}
+
 	var categories []models.Category
-	if err := db.Find(&categories).Error; err != nil {
+	if err := db.Order(sortBy).Offset(offset).Limit(limit).Find(&categories).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Failed to fetch categories",
 		})
