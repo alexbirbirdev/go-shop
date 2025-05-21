@@ -198,3 +198,75 @@ func UpdateImageOrder(c *gin.Context) {
 		"message": "Image order updated successfully",
 	})
 }
+
+func DeleteProductImage(c *gin.Context) {
+	db := config.DB
+	productID := c.Param("id")
+	imageID := c.Param("image_id")
+
+	if err := db.Model(&models.Product{}).Where("id = ?", productID).First(&models.Product{}).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{
+				"error": "Product not found",
+			})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to fetch product",
+		})
+		return
+	}
+	if err := db.Model(&models.ProductImage{}).Where("id = ?", imageID).First(&models.ProductImage{}).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{
+				"error": "Product not found",
+			})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to fetch product",
+		})
+		return
+	}
+
+	if err := db.Where("product_id = ? AND id = ?", productID, imageID).Delete(&models.ProductImage{}).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to delete image",
+		})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Image deleted successfully",
+	})
+}
+
+func GetProductImages(c *gin.Context) {
+	db := config.DB
+	productID := c.Param("id")
+
+	if err := db.Model(&models.Product{}).Where("id = ?", productID).First(&models.Product{}).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{
+				"error": "Product not found",
+			})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to fetch product",
+		})
+		return
+	}
+
+	var images []models.ProductImage
+
+	if err := db.Order("sort_order ASC").Where("product_id = ?", productID).Find(&images).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to fetch images",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"images": images,
+	})
+}
