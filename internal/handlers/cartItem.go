@@ -14,15 +14,6 @@ import (
 func CreateCartItem(c *gin.Context) {
 	db := config.DB
 
-	var cartItem models.CartItem
-
-	if err := c.ShouldBindJSON(&cartItem); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "Invalid input",
-		})
-		return
-	}
-
 	userID, ok := utils.GetUserID(c)
 	if !ok {
 		c.JSON(http.StatusUnauthorized, gin.H{
@@ -31,17 +22,57 @@ func CreateCartItem(c *gin.Context) {
 		return
 	}
 
-	cartItem.UserID = userID // Assuming a logged-in user with ID 1
-	var existingCartItem models.CartItem
-	if err := db.Where("user_id = ? AND product_id = ? AND product_variant_id = ?", cartItem.UserID, cartItem.ProductID, cartItem.ProductVariantID).First(&existingCartItem).Error; err == nil {
-		existingCartItem.Quantity += cartItem.Quantity
-		if err := db.Save(&existingCartItem).Error; err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"error": "Failed to update cart item",
+	var input struct {
+		ProductVariantID uint `json:"product_variant_id" binding:"required"`
+		Quantity         int  `json:"quantity" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Invalid input",
+		})
+		return
+	}
+
+	cartItem := models.CartItem{
+		UserID:           uint(userID),
+		ProductVariantID: input.ProductVariantID,
+		Quantity:         input.Quantity,
+	}
+
+	var variant models.ProductVariant
+	if err := db.First(&variant, cartItem.ProductVariantID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{
+				"error": "Product variant not found",
 			})
 			return
 		}
-	} else if err := db.Create(&cartItem).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to fetch product variant",
+		})
+		return
+	}
+	if !variant.IsActive {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Product variant is not active",
+		})
+		return
+	}
+
+	var existingCartItem models.CartItem
+	if err := db.Where("user_id = ? AND product_variant_id = ?", userID, cartItem.ProductVariantID).First(&existingCartItem).Error; err == nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{
+				"error": "Cart item not found",
+			})
+			return
+		}
+		c.JSON(http.StatusConflict, gin.H{
+			"error": "Cart item already exists",
+		})
+		return
+	}
+	if err := db.Create(&cartItem).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Failed to create cart item",
 		})
@@ -63,7 +94,7 @@ func GetCartItems(c *gin.Context) {
 		return
 	}
 	var cartItems []models.CartItem
-	if err := db.Preload("Product").Preload("ProductVariants").Where("user_id = ?", userID).Find(&cartItems).Error; err != nil {
+	if err := db.Preload("ProductVariant").Preload("ProductVariant.Product").Where("user_id = ?", userID).Find(&cartItems).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Failed to fetch cart items",
 		})
@@ -201,6 +232,12 @@ func UpdateQuantity(c *gin.Context) {
 		}
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Failed to fetch product variant",
+		})
+		return
+	}
+	if input.Quantity < 1 {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Quantity must be at least 1",
 		})
 		return
 	}

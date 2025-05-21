@@ -48,7 +48,6 @@ func CreateOrder(c *gin.Context) {
 		total += price * float64(quantity)
 
 		orderItem := models.OrderItem{
-			ProductID:        item.ProductID,
 			ProductVariantID: item.ProductVariantID,
 			Quantity:         quantity,
 			Price:            price,
