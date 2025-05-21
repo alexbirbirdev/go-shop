@@ -28,6 +28,31 @@ func CreateUserAddresses(c *gin.Context) {
 		})
 		return
 	}
+	var existingAddresses []models.UserAddress
+	if err := db.Where("user_id = ?", userID).Find(&existingAddresses).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to fetch user addresses",
+		})
+		return
+	}
+	if len(existingAddresses) == 0 {
+		userAddress.IsDefault = true
+	} else {
+		if userAddress.IsDefault {
+			for _, address := range existingAddresses {
+				address.IsDefault = false
+				if err := db.Save(&address).Error; err != nil {
+					c.JSON(http.StatusInternalServerError, gin.H{
+						"error": "Failed to update existing addresses",
+					})
+					return
+				}
+			}
+			userAddress.IsDefault = true
+		} else {
+			userAddress.IsDefault = false
+		}
+	}
 	userAddress.UserID = uint(userID)
 	if err := db.Create(&userAddress).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -155,6 +180,25 @@ func UpdateUserAddress(c *gin.Context) {
 			"error": "Invalid input",
 		})
 		return
+	}
+	var existingAddresses []models.UserAddress
+	if err := db.Where("user_id = ?", userID).Find(&existingAddresses).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to fetch user addresses",
+		})
+		return
+	}
+	if input.IsDefault {
+		for _, address := range existingAddresses {
+			address.IsDefault = false
+			if err := db.Save(&address).Error; err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{
+					"error": "Failed to update existing addresses",
+				})
+				return
+			}
+		}
+		userAddress.IsDefault = true
 	}
 	if err := db.Model(&userAddress).Where("user_id = ? AND id = ?", userID, id).Updates(input).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{

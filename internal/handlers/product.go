@@ -205,25 +205,26 @@ func GetProduct(c *gin.Context) {
 	id := c.Param("id")
 	db := config.DB
 
+	// Получаем продукт с вариантами
 	var product models.Product
-	if err := db.Preload("ProductVariants").First(&product, id).Error; err != nil {
+	if err := db.Preload("ProductVariants", "is_active = ?", true).First(&product, id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			c.JSON(http.StatusNotFound, gin.H{
-				"error": "Product not found",
-			})
+			c.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
 			return
 		}
-
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Failed to fetch product",
-		})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch product"})
 		return
 	}
+
+	userID, isAuth := utils.GetUserID(c)
+
 	type VariantResponse struct {
-		ID    uint    `json:"id"`
-		Name  string  `json:"name"`
-		Stock int     `json:"stock"`
-		Price float64 `json:"price"`
+		ID     uint    `json:"id"`
+		Name   string  `json:"name"`
+		Stock  int     `json:"stock"`
+		Price  float64 `json:"price"`
+		IsFav  *bool   `json:"is_fav,omitempty"`
+		InCart *bool   `json:"in_cart,omitempty"`
 	}
 
 	type ProductResponse struct {
@@ -238,14 +239,66 @@ func GetProduct(c *gin.Context) {
 	}
 
 	// Собираем варианты
-	var variants []VariantResponse
-	for _, v := range product.ProductVariants {
-		variants = append(variants, VariantResponse{
-			ID:    v.ID,
-			Name:  v.Name,
-			Stock: v.Stock,
-			Price: v.Price,
-		})
+	variants := make([]VariantResponse, len(product.ProductVariants))
+
+	if isAuth {
+		// Получаем ID всех вариантов продукта
+		var variantIDs []uint
+		for _, v := range product.ProductVariants {
+			variantIDs = append(variantIDs, v.ID)
+		}
+
+		// Получаем варианты в избранном
+		var favoriteVariantIDs []uint
+		if len(variantIDs) > 0 {
+			db.Model(&models.Favorite{}).
+				Where("user_id = ? AND product_variant_id IN (?)", userID, variantIDs).
+				Pluck("product_variant_id", &favoriteVariantIDs)
+		}
+
+		// Получаем варианты в корзине
+		var cartVariantIDs []uint
+		if len(variantIDs) > 0 {
+			db.Model(&models.CartItem{}).
+				Where("user_id = ? AND product_variant_id IN (?)", userID, variantIDs).
+				Pluck("product_variant_id", &cartVariantIDs)
+		}
+
+		// Создаем мапы для быстрой проверки
+		favoriteMap := make(map[uint]bool)
+		for _, id := range favoriteVariantIDs {
+			favoriteMap[id] = true
+		}
+
+		cartMap := make(map[uint]bool)
+		for _, id := range cartVariantIDs {
+			cartMap[id] = true
+		}
+
+		// Заполняем варианты с флагами
+		for i, v := range product.ProductVariants {
+			isFav := favoriteMap[v.ID]
+			inCart := cartMap[v.ID]
+
+			variants[i] = VariantResponse{
+				ID:     v.ID,
+				Name:   v.Name,
+				Stock:  v.Stock,
+				Price:  v.Price,
+				IsFav:  &isFav,
+				InCart: &inCart,
+			}
+		}
+	} else {
+		// Для неавторизованных - без флагов
+		for i, v := range product.ProductVariants {
+			variants[i] = VariantResponse{
+				ID:    v.ID,
+				Name:  v.Name,
+				Stock: v.Stock,
+				Price: v.Price,
+			}
+		}
 	}
 
 	result := ProductResponse{

@@ -11,7 +11,7 @@ func SetupRoutes(r *gin.Engine) {
 	productRoutes := r.Group("/products")
 	{
 		productRoutes.GET("/", middleware.OptionalAuthMiddleware(), handlers.GetProducts)
-		productRoutes.GET("/:id", handlers.GetProduct)
+		productRoutes.GET("/:id", middleware.OptionalAuthMiddleware(), handlers.GetProduct)
 		productRoutes.GET("/:id/variants", handlers.GetProductVariants)
 	}
 
