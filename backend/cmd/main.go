@@ -1,8 +1,8 @@
 package main
 
 import (
-	"alexbirbirdev/go-shop/config"
-	"alexbirbirdev/go-shop/internal/routes"
+	"alexbirbirdev/go-shop/backend/config"
+	"alexbirbirdev/go-shop/backend/internal/routes"
 
 	"github.com/gin-gonic/gin"
 )

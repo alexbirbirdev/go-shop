@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"alexbirbirdev/go-shop/internal/services/auth"
+	"alexbirbirdev/go-shop/backend/internal/services/auth"
 	"net/http"
 
 	"github.com/gin-gonic/gin"

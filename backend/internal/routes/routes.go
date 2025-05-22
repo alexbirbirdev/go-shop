@@ -1,8 +1,8 @@
 package routes
 
 import (
-	"alexbirbirdev/go-shop/internal/handlers"
-	"alexbirbirdev/go-shop/internal/middleware"
+	"alexbirbirdev/go-shop/backend/internal/handlers"
+	"alexbirbirdev/go-shop/backend/internal/middleware"
 
 	"github.com/gin-gonic/gin"
 )

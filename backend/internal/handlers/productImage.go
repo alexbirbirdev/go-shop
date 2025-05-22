@@ -1,8 +1,8 @@
 package handlers
 
 import (
-	"alexbirbirdev/go-shop/config"
-	"alexbirbirdev/go-shop/internal/models"
+	"alexbirbirdev/go-shop/backend/config"
+	"alexbirbirdev/go-shop/backend/internal/models"
 	"errors"
 	"net/http"
 	"os"

@@ -1,4 +1,4 @@
-module alexbirbirdev/go-shop
+module alexbirbirdev/go-shop/backend
 
 go 1.23.4
 
