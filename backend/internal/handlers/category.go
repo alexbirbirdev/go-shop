@@ -43,6 +43,7 @@ func GetCategories(c *gin.Context) {
 	type CategoryResponse struct {
 		ID       uint   `json:"id"`
 		Name     string `json:"name"`
+		ParentID *uint  `json: "parent_id"`
 		Children []struct {
 			ID   uint   `json:"id"`
 			Name string `json:"name"`
@@ -51,8 +52,9 @@ func GetCategories(c *gin.Context) {
 	var response []CategoryResponse
 	for _, c := range categories {
 		response = append(response, CategoryResponse{
-			ID:   c.ID,
-			Name: c.Name,
+			ID:       c.ID,
+			Name:     c.Name,
+			ParentID: c.ParentID,
 			Children: []struct {
 				ID   uint   `json:"id"`
 				Name string `json:"name"`
@@ -94,8 +96,9 @@ func GetCategory(c *gin.Context) {
 	}
 
 	type CategoryResponse struct {
-		ID   uint   `json:"id"`
-		Name string `json:"name"`
+		ID       uint   `json:"id"`
+		Name     string `json:"name"`
+		ParentID *uint  `json:"parent_id"`
 		// Children []struct {
 		// 	ID   uint   `json:"id"`
 		// 	Name string `json:"name"`
@@ -104,6 +107,7 @@ func GetCategory(c *gin.Context) {
 	var response CategoryResponse
 	response.ID = category.ID
 	response.Name = category.Name
+	response.ParentID = category.ParentID
 	// for _, child := range category.Children {
 	// 	response.Children = append(response.Children, struct {
 	// 		ID   uint   `json:"id"`
