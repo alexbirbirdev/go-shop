@@ -1,9 +1,10 @@
 <script>
+import VFlashMessage from '@/components/forms/VFlashMessage.vue'
 import axios from 'axios'
 export default {
   name: 'SignUpView',
 
-  components: {},
+  components: { VFlashMessage },
 
   props: {},
 
@@ -16,35 +17,59 @@ export default {
         confirmPassword: '',
         agreeTerms: false,
       },
+      flashMessage: null,
     }
   },
 
   computed: {},
 
   methods: {
+    showSuccess(message) {
+      message = message || 'все гуд'
+      this.flashMessage = {
+        text: message,
+        type: 'success',
+      }
+    },
+    showError(message) {
+      message = message || 'Произошла ошибка'
+      this.flashMessage = {
+        text: message,
+        type: 'error',
+      }
+    },
     async handleSubmit() {
       if (this.form.password !== this.form.confirmPassword) {
-        alert('Пароли не совпадают')
+        this.showError('Пароли не совпадают')
         return
       }
 
       this.loading = true
       try {
-        const response = await axios.post('http://localhost:8080/auth/signup', {
+        const response = await axios.post(
+          'http://localhost:8080/auth/signup',
+          {
             email: this.form.email,
-            password: this.form.password
-        }, {
-          headers: {
-            'Content-Type': 'application/json',
+            password: this.form.password,
           },
-        })
+          {
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          },
+        )
         console.log(response.data)
-
 
         // const redirect = this.$route.query.redirect || '/'
         // await this.$router.push(redirect)
+        this.showSuccess(response.data.message + '. Авторизируйтесь!')
+        this.form.email = null
+        this.form.password = null
+        this.form.confirmPassword = null
+        this.form.agreeTerms = null
       } catch (error) {
-        console.error('Ошибка регистрации:', error.response.data.error)
+        // console.error('Ошибка регистрации:', error.response.data.error)
+        this.showError(error.response.data.error)
       } finally {
         this.loading = false
       }
@@ -63,6 +88,7 @@ export default {
 
 <template>
   <div class="min-h-screen flex items-center justify-center bg-gray-50">
+    <VFlashMessage v-if="flashMessage" :message="flashMessage.text" :type="flashMessage.type" />
     <div class="w-full max-w-md p-8 space-y-8 bg-white rounded-lg shadow">
       <h2 class="text-2xl font-bold text-center text-gray-900">Создать аккаунт</h2>
       <form class="mt-8 space-y-6" @submit.prevent="handleSubmit">

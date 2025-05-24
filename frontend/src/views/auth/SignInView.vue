@@ -1,10 +1,13 @@
 <script>
+import VFlashMessage from '@/components/forms/VFlashMessage.vue'
 import axios from 'axios'
 
 export default {
   name: 'SignInView',
 
-  components: {},
+  components: {
+    VFlashMessage,
+  },
 
   props: {},
 
@@ -15,13 +18,20 @@ export default {
         email: '',
         password: '',
       },
-      message: '',
+      flashMessage: null,
     }
   },
 
   computed: {},
 
   methods: {
+    showError(message) {
+      message = message || 'Произошла ошибка'
+      this.flashMessage = {
+        text: message,
+        type: 'error',
+      }
+    },
     async handleSubmit() {
       this.loading = true
       try {
@@ -45,7 +55,8 @@ export default {
         const redirect = this.$route.query.redirect || '/'
         await this.$router.push(redirect)
       } catch (error) {
-        console.error('Ошибка авторизации:', error.response.data.error)
+        // console.error('Ошибка авторизации:', error.response.data.error)
+        this.showError(error.response.data.error)
       } finally {
         this.loading = false
       }
@@ -64,6 +75,7 @@ export default {
 
 <template>
   <div class="min-h-screen flex items-center justify-center bg-gray-50">
+    <VFlashMessage v-if="flashMessage" :message="flashMessage.text" :type="flashMessage.type" />
     <div class="w-full max-w-md p-8 space-y-8 bg-white rounded-lg shadow">
       <h2 class="text-2xl font-bold text-center text-gray-900">Вход в аккаунт</h2>
       <form class="mt-8 space-y-6" @submit.prevent="handleSubmit">

@@ -1,6 +1,6 @@
 <script>
 export default {
-  name: 'YourComponentName',
+  name: 'VFooter',
 
   components: {},
 
