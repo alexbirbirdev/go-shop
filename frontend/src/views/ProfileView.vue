@@ -1,18 +1,26 @@
 <script>
+import VButton from '@/components/forms/VButton.vue'
+
 export default {
   name: 'ProfileView',
 
-  components: {},
+  components: { VButton },
 
   props: {},
 
   data() {
-    return {};
+    return {}
   },
 
   computed: {},
 
-  methods: {},
+  methods: {
+    logout() {
+      localStorage.removeItem('token')
+      this.$store.commit('SET_AUTH', false)
+      this.$router.push('/auth/signin')
+    }
+  },
 
   watch: {},
 
@@ -21,12 +29,12 @@ export default {
   updated() {},
   beforeUnmount() {},
   unmounted() {},
-};
+}
 </script>
 
 <template>
   <div>
-    <!-- Контент -->
+    <VButton variant="danger" @click="logout">Выйти</VButton>
   </div>
 </template>
 

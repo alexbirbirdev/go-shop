@@ -9,7 +9,7 @@ export default {
   data() {
     return {
       headerRouters: [
-        {name: "Каталог", link: "/catalog"},
+        // {name: "Каталог", link: "/catalog"},
         {name: "Корзина", link: "/cart"},
         {name: "Избранное", link: "/favorite"},
         {name: "Заказы", link: "/orders"},
@@ -36,7 +36,11 @@ export default {
     <div class="container px-4 flex justify-between items-center">
       <h1 class="text-xl font-bold">GO Shop</h1>
       <nav class="flex items-center gap-4">
+        <router-link to="/catalog/">Каталог</router-link>
         <router-link :to="r.link" v-for="r in headerRouters" :key="r.id">{{ r.name }}</router-link>
+        <router-link to="/profile/">
+          Профиль
+        </router-link>
       </nav>
     </div>
   </header>

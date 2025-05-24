@@ -104,10 +104,10 @@ func SignIn(c *gin.Context) {
 		return
 	}
 
-	c.SetCookie("token", token, 3600*24, "/", "localhost", false, true)
+	// c.SetCookie("token", token, 3600*24, "/", "localhost", false, true)
 
 	c.JSON(http.StatusOK, gin.H{
-		"message": "User signed in successfully",
+		"token": token,
 	})
 
 }
