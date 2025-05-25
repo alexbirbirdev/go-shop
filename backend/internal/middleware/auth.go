@@ -10,12 +10,12 @@ import (
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		token := c.GetHeader("Authorization")
-		if token == "" {
-			token, _ = c.Cookie("token") // если нет токена в header, ищем его в cookies
-		}
+		// if token == "" {
+		// 	token, _ = c.Cookie("token") // если нет токена в header, ищем его в cookies
+		// }
 		if token == "" {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-				"error": "Unauthorized",
+				"error": "Unauthorized in middleware",
 			})
 			return
 		}
@@ -38,9 +38,9 @@ func AuthMiddleware() gin.HandlerFunc {
 func AuthRequired(c *gin.Context) {
 	// Проверяем наличие токена в заголовке или cookies
 	tokenString := c.GetHeader("Authorization")
-	if tokenString == "" {
-		tokenString, _ = c.Cookie("token") // если нет токена в header, ищем его в cookies
-	}
+	// if tokenString == "" {
+	// 	tokenString, _ = c.Cookie("token") // если нет токена в header, ищем его в cookies
+	// }
 
 	// Если токен не найден, продолжаем обработку запроса
 	if tokenString == "" {
@@ -57,7 +57,8 @@ func AuthRequired(c *gin.Context) {
 
 func OptionalAuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		token, _ := c.Cookie("token")
+		token := c.GetHeader("Authorization")
+		// token, _ := c.Cookie("token")
 		// if err != nil {
 		// 	c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
 		// 		"error": "Unauthorized",

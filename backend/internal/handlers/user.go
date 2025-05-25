@@ -63,7 +63,7 @@ func UpdateUserProfile(c *gin.Context) {
 	userID, ok := utils.GetUserID(c)
 	if !ok {
 		c.JSON(http.StatusUnauthorized, gin.H{
-			"error": "Unauthorized",
+			"error": "Unauthorized in handler",
 		})
 		return
 	}
