@@ -9,8 +9,11 @@ import (
 
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		token, err := c.Cookie("token")
-		if err != nil {
+		token := c.GetHeader("Authorization")
+		if token == "" {
+			token, _ = c.Cookie("token") // если нет токена в header, ищем его в cookies
+		}
+		if token == "" {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
 				"error": "Unauthorized",
 			})

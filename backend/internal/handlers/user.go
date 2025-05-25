@@ -13,8 +13,11 @@ import (
 )
 
 type UserProfileResponse struct {
-	Name     string `json:"name"`
-	LastName string `json:"last_name"`
+	Username   string `json:"username"`
+	Name       string `json:"name"`
+	LastName   string `json:"last_name"`
+	Created_at string `json:"created_at"`
+	Role       string `json:"role"`
 }
 
 func GetUserProfile(c *gin.Context) {
@@ -42,8 +45,11 @@ func GetUserProfile(c *gin.Context) {
 	}
 
 	response := UserProfileResponse{
-		Name:     userProfile.Name,
-		LastName: userProfile.LastName,
+		Username:   userProfile.Email,
+		Name:       userProfile.Name,
+		LastName:   userProfile.LastName,
+		Created_at: userProfile.Model.CreatedAt.Format("2006-01-02 15:04:05"),
+		Role:       userProfile.Role,
 	}
 
 	c.JSON(http.StatusOK, gin.H{
