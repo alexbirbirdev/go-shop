@@ -25,7 +25,7 @@ export default {
 </script>
 
 <template>
-  <footer class="bg-white border-t py-6 mt-8 flex justify-center w-full">
+  <footer class="bg-white border-t py-6 flex justify-center w-full">
     <div class="container px-4 text-center text-gray-500">© 2025 GO Shop</div>
   </footer>
 </template>

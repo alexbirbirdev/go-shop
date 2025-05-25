@@ -62,6 +62,7 @@ func CreateUserAddresses(c *gin.Context) {
 	}
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "User address created",
+		"address": userAddress,
 	})
 }
 
@@ -97,7 +98,7 @@ func GetUserAddresses(c *gin.Context) {
 	}
 
 	var userAddresses []models.UserAddress
-	if err := db.Where("user_id = ?", userID).Find(&userAddresses).Error; err != nil {
+	if err := db.Order("created_at DESC").Where("user_id = ?", userID).Find(&userAddresses).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Failed to fetch user addresses",
 		})
