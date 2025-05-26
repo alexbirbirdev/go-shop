@@ -1,4 +1,5 @@
 <script>
+import VAdminNav from './components/layout/VAdminNav.vue'
 import VFooter from './components/layout/VFooter.vue'
 import VHeader from './components/layout/VHeader.vue'
 
@@ -8,6 +9,7 @@ export default {
   components: {
     VHeader,
     VFooter,
+    VAdminNav,
   },
 
   props: {},
@@ -38,6 +40,7 @@ export default {
     >
       <VHeader />
       <div class="container">
+        <VAdminNav v-if="$route.meta.adminPage" class="mb-10" />
         <router-view />
       </div>
       <div class="pt-5 w-full">

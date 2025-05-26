@@ -10,7 +10,7 @@ export default {
       required: true,
       validator: (value) => {
         return value.every((option) => {
-          return 'value' in option && 'label' in option && 'direction' in option
+          return 'value' in option && 'label' in option
         })
       },
     },
@@ -28,11 +28,11 @@ export default {
 
   computed: {
     activeOption() {
+      if (!this.modelValue || !this.modelValue.value) {
+        return { value: null, label: this.modelValue.label }
+      }
       return (
-        this.options.find(
-          (opt) =>
-            opt.value === this.modelValue.value && opt.direction === this.modelValue.direction,
-        ) || this.options[0]
+        this.options.find((opt) => opt.value === this.modelValue.value) || this.modelValue.label
       )
     },
   },
@@ -41,7 +41,6 @@ export default {
     selectOption(option) {
       this.$emit('update:modelValue', {
         value: option.value,
-        direction: option.direction,
       })
       this.isOpen = false
     },
@@ -85,7 +84,7 @@ export default {
     >
       <ul
         v-if="isOpen"
-        class="absolute overflow-hidden right-0 z-10 mt-1 w-40 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+        class="absolute max-h-[200px] overflow-y-scroll right-0 z-10 mt-1 w-40 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
       >
         <li
           v-for="option in options"

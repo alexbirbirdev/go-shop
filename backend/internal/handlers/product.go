@@ -492,9 +492,44 @@ func AdminGetProducts(c *gin.Context) {
 		})
 		return
 	}
+	type ProductResponse struct {
+		ID          uint                  `json:"id"`
+		Images      []models.ProductImage `json:"images" gorm:"foreignKey:ProductID"`
+		Name        string                `json:"name"`
+		IsActive    bool                  `json:"is_active"`
+		Category    string                `json:"category"`
+		Description string                `json:"description"`
+		Price       float64               `json:"price"`
+		Stock       int                   `json:"stock"`
 
+		CreatedAt string `json:"created_at"`
+		UpdatedAt string `json:"updated_at"`
+	}
+
+	productResponses := make([]ProductResponse, len(products))
+	for i, product := range products {
+		categoryName := ""
+		if product.CategoryID != 0 {
+			var category models.Category
+			if err := db.Select("name").First(&category, product.CategoryID).Error; err == nil {
+				categoryName = category.Name
+			}
+		}
+		productResponses[i] = ProductResponse{
+			ID:          product.ID,
+			Images:      product.Images,
+			Name:        product.Name,
+			IsActive:    product.IsActive,
+			Category:    categoryName,
+			Description: product.Description,
+			Price:       product.Price,
+			Stock:       product.Stock,
+			CreatedAt:   product.CreatedAt.Format("2006-01-02"),
+			UpdatedAt:   product.UpdatedAt.Format("2006-01-02"),
+		}
+	}
 	c.JSON(http.StatusOK, gin.H{
-		"products": products,
+		"products": productResponses,
 	})
 }
 

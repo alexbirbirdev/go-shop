@@ -1,3 +1,8 @@
+import AdminCategoriesView from '@/views/admin/AdminCategoriesView.vue'
+import AdminOrdersView from '@/views/admin/AdminOrdersView.vue'
+import AdminProductsView from '@/views/admin/AdminProductsView.vue'
+import AdminView from '@/views/admin/AdminView.vue'
+import UsersView from '@/views/admin/UsersView.vue'
 import SignInView from '@/views/auth/SignInView.vue'
 import SignUpView from '@/views/auth/SignUpView.vue'
 import CartView from '@/views/CartView.vue'
@@ -89,6 +94,51 @@ const router = createRouter({
       component: SignUpView,
       meta: {
         authPage: true,
+      },
+    },
+    {
+      path: '/admin',
+      name: 'admin',
+      component: AdminView,
+      meta: {
+        requiresAuth: true,
+        adminPage: true,
+      },
+    },
+    {
+      path: '/admin/users',
+      name: 'adminUsers',
+      component: UsersView,
+      meta: {
+        requiresAuth: true,
+        adminPage: true,
+      },
+    },
+    {
+      path: '/admin/orders',
+      name: 'adminOrders',
+      component: AdminOrdersView,
+      meta: {
+        requiresAuth: true,
+        adminPage: true,
+      },
+    },
+    {
+      path: '/admin/products',
+      name: 'adminProducts',
+      component: AdminProductsView,
+      meta: {
+        requiresAuth: true,
+        adminPage: true,
+      },
+    },
+    {
+      path: '/admin/categories',
+      name: 'adminCategories',
+      component: AdminCategoriesView,
+      meta: {
+        requiresAuth: true,
+        adminPage: true,
       },
     },
   ],

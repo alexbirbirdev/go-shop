@@ -71,7 +71,7 @@ export default {
         return `Рядовой пользователь`
       }
       if (this.user.role == 'admin') {
-        return `Админ`
+        return 'Админ'
       }
       return `Ноунейм галимый`
     },

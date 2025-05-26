@@ -1,14 +1,14 @@
 <script>
 import axios from 'axios'
 import VButton from '@/components/forms/VButton.vue'
-import VSelect from '@/components/forms/VSelect.vue'
+// import VSelect from '@/components/forms/VSelect.vue'
 import ProductCard from '@/components/ui/VProductCard.vue'
 export default {
   name: 'CatalogView',
 
   components: {
     ProductCard,
-    VSelect,
+    // VSelect,
     VButton,
   },
 
@@ -153,7 +153,7 @@ export default {
       </div>
       <div class="col-span-4 flex flex-col gap-10">
         <div class="">
-          <VSelect v-model="selectedSort" :options="sortOptions" />
+          <!-- <VSelect v-model="selectedSort" :options="sortOptions" /> -->
         </div>
         <div class="grid grid-cols-4 gap-5">
           <ProductCard

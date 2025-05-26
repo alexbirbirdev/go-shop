@@ -151,8 +151,31 @@ func AdminGetUsers(c *gin.Context) {
 		return
 	}
 
+	type UserResponse struct {
+		ID        uint   `json:"id"`
+		Name      string `json:"name"`
+		LastName  string `json:"last_name"`
+		Email     string `json:"email"`
+		Role      string `json:"role"`
+		CreatedAt string `json:"created_at"`
+		UpdatedAt string `json:"updated_at"`
+	}
+
+	result := make([]UserResponse, len(users))
+	for i, user := range users {
+		result[i] = UserResponse{
+			ID:        user.ID,
+			Name:      user.Name,
+			LastName:  user.LastName,
+			Email:     user.Email,
+			Role:      user.Role,
+			CreatedAt: user.CreatedAt.Format("2006-01-02"),
+			UpdatedAt: user.UpdatedAt.Format("2006-01-02"),
+		}
+	}
+
 	c.JSON(http.StatusOK, gin.H{
-		"users": users,
+		"users": result,
 	})
 }
 func AdminGetUser(c *gin.Context) {
