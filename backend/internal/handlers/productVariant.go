@@ -52,42 +52,87 @@ func GetProductVariant(c *gin.Context) {
 }
 
 // admin
+
 func CreateProductVariant(c *gin.Context) {
 	db := config.DB
-
-	id := c.Param("id")
-	var products []models.Product
-	if err := db.First(&products, id).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Failed to fetch product",
-		})
-		return
+	productIDParam := c.Param("id")
+	type VariantsInput struct {
+		Variants []models.ProductVariant `json:"variants"`
 	}
-
-	var variant models.ProductVariant
-
-	if err := c.ShouldBindJSON(&variant); err != nil {
+	var input VariantsInput
+	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "Invalid input",
+			"error": "Неверный формат запроса: " + err.Error(),
 		})
 		return
 	}
 
-	variant.ProductID = products[0].ID
+	var product models.Product
+	if err := db.First(&product, productIDParam).Error; err != nil {
 
-	if err := db.Create(&variant).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"error": "Товар не найден",
+		})
+		return
+	}
+	for i := range input.Variants {
+		input.Variants[i].ProductID = product.ID
+	}
+
+	if err := db.Create(&input.Variants).Error; err != nil {
 		if strings.Contains(err.Error(), "duplicate") {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Variant with this name already exists for the product"})
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": "Один из вариантов уже существует для этого товара",
+			})
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create variant"})
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Не удалось сохранить варианты: " + err.Error(),
+		})
 		return
 	}
-
 	c.JSON(http.StatusCreated, gin.H{
-		"message": "Product variant created",
+		"message":  "Варианты успешно созданы",
+		"variants": input.Variants,
 	})
 }
+
+// func CreateProductVariant(c *gin.Context) {
+// 	db := config.DB
+
+// 	id := c.Param("id")
+// 	var products []models.Product
+// 	if err := db.First(&products, id).Error; err != nil {
+// 		c.JSON(http.StatusInternalServerError, gin.H{
+// 			"error": "Failed to fetch product",
+// 		})
+// 		return
+// 	}
+
+// 	var variant models.ProductVariant
+
+// 	if err := c.ShouldBindJSON(&variant); err != nil {
+// 		c.JSON(http.StatusBadRequest, gin.H{
+// 			"error": "Invalid input",
+// 		})
+// 		return
+// 	}
+
+// 	variant.ProductID = products[0].ID
+
+// 	if err := db.Create(&variant).Error; err != nil {
+// 		if strings.Contains(err.Error(), "duplicate") {
+// 			c.JSON(http.StatusBadRequest, gin.H{"error": "Variant with this name already exists for the product"})
+// 			return
+// 		}
+// 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create variant"})
+// 		return
+// 	}
+
+// 	c.JSON(http.StatusCreated, gin.H{
+// 		"message": "Product variant created",
+// 	})
+// }
 
 func DeleteProductVariant(c *gin.Context) {
 	db := config.DB

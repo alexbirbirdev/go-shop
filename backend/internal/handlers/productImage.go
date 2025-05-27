@@ -45,13 +45,22 @@ func UploadProductImage(c *gin.Context) {
 		return
 	}
 
-	uploadBaseDir := os.Getenv("URL_UPLOAD_PRODUCT_IMAGE")
-	if uploadBaseDir == "" {
+	uploadDir := os.Getenv("URL_UPLOAD_PRODUCT_IMAGE") // ./uploads/products/
+	if uploadDir == "" {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Upload directory not configured"})
 		return
 	}
+	// Лучше перевести в абсолютный путь
+	// absUploadBaseDir, err := filepath.Abs(uploadBaseDir)
+	// if err != nil {
+	// 	c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get absolute path"})
+	// 	return
+	// }
 
-	uploadDir := uploadBaseDir + productID
+	// Например: /Users/alex/project/uploads/products
+	uploadDir = filepath.Join(uploadDir, productID)
+
+	// Создаём директорию, если её нет
 	if err := os.MkdirAll(uploadDir, os.ModePerm); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create upload directory"})
 		return
@@ -68,6 +77,8 @@ func UploadProductImage(c *gin.Context) {
 		return
 	}
 
+	baseFilePath := os.Getenv("BASE_API_URL")
+
 	for i, file := range files {
 		ext := filepath.Ext(file.Filename)
 		fileName := uuid.New().String() + ext
@@ -81,7 +92,7 @@ func UploadProductImage(c *gin.Context) {
 
 		images = append(images, models.ProductImage{
 			ProductID: product.ID,
-			ImageURL:  uploadDir + "/" + fileName,
+			ImageURL:  baseFilePath + "/uploads/products/" + productID + "/" + fileName,
 			IsPreview: isPreview,
 			SortOrder: maxSortOrder + 1 + i,
 		})

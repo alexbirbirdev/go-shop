@@ -172,11 +172,15 @@ export default {
           <td>
             <div class="">
               <div
-                v-if="!product.images"
+                v-if="!product.images.length"
                 class="bg-cover bg-center w-20 aspect-square rounded-xl overflow-hidden shadow"
                 style="background-image: url(https://placehold.co/600x400)"
               ></div>
-              <div class="" v-else>{{ product.images }}</div>
+              <div
+                class="bg-cover bg-center w-20 aspect-square rounded-xl overflow-hidden shadow"
+                :style="'background-image: url(' + product.images[0].image_url + ')'"
+                v-else
+              ></div>
             </div>
           </td>
           <td>

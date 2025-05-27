@@ -343,6 +343,7 @@ func CreateProduct(c *gin.Context) {
 	}
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "Product created",
+		"id":      product.ID,
 	})
 }
 
@@ -486,7 +487,7 @@ func AdminGetProducts(c *gin.Context) {
 	query = query.Order(sortBy).Limit(limit).Offset(offset)
 
 	var products []models.Product
-	if err := query.Find(&products).Error; err != nil {
+	if err := query.Preload("Images").Find(&products).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Failed to fetch products",
 		})

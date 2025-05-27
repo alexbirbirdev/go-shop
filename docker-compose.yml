@@ -12,6 +12,8 @@ services:
       - DB_NAME=go_shop
     depends_on:
       - db
+    volumes:
+      - ./uploads:/app/uploads
     env_file:
       - .env
     restart: unless-stopped

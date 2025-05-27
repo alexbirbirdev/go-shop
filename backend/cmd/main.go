@@ -29,6 +29,7 @@ func main() {
 	// })
 
 	r.Use(middleware.CORS())
+	r.Static("/uploads", "./uploads")
 
 	routes.SetupRoutes(r)
 	r.Run()
