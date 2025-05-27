@@ -189,7 +189,7 @@ export default {
       message = message || 'все гуд'
       this.flashMessage = {
         text: message,
-        type: 'error',
+        type: 'danger',
       }
     },
     async getCategories() {
@@ -233,66 +233,6 @@ export default {
         this.loadingCategories = false
       }
     },
-    // async createProduct() {
-    //   try {
-    //     this.loadingCategories = true
-    //     const response = await axios.post(
-    //       'http://localhost:8080/admin/products/',
-    //       {
-    //         name: this.form.name,
-    //         description: this.form.description,
-    //         category_id: this.form.category,
-    //       },
-    //       {
-    //         headers: {
-    //           Authorization: localStorage.getItem('token'),
-    //         },
-    //       },
-    //     )
-    //     this.showSuccess(response.data.message)
-    //     this.form = {
-    //       name: '',
-    //       description: '',
-    //       category: '',
-    //     }
-    //     this.categoryCurrent = {
-    //       value: null,
-    //       label: 'Выберите категорию',
-    //     }
-    //     this.addNewCategory = ''
-    //     this.flashMessage = null
-    //     // this.closePopup()
-    //   } catch (error) {
-    //     console.error('Ошибка при создании товара:', error)
-    //     this.flashMessage = {
-    //       text: 'Ошибка при создании товара',
-    //       type: 'error',
-    //     }
-    //   } finally {
-    //     this.loadingCategories = false
-    //   }
-    // },
-    // submitForm() {
-    //   // submit #createProduct form
-    //   if (this.form.name && this.form.description && this.form.category) {
-    //     this.createProduct()
-    //   } else {
-    //     this.flashMessage = {
-    //       text: 'Пожалуйста, заполните все поля',
-    //       type: 'error',
-    //     }
-    //   }
-    // },
-    // async handleSubmit() {
-    //   // Добавляем проверку на повторный вызов
-    //   if (this.isSubmitting) return;
-    //     this.isSubmitting = true;
-    //   try {
-    //     await this.createProduct();
-    //   } finally {
-    //     this.isSubmitting = false;
-    //   }
-    // },
   },
 
   watch: {

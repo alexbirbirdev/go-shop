@@ -132,7 +132,7 @@ func DeleteCartItem(c *gin.Context) {
 	id := c.Param("id")
 	var cartItem models.CartItem
 
-	if err := db.Where("id = ? AND user_id = ?", id, userID).First(&cartItem).Error; err != nil {
+	if err := db.Where("product_variant_id = ? AND user_id = ?", id, userID).First(&cartItem).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{
 				"error": "Cart item not found",
@@ -145,7 +145,7 @@ func DeleteCartItem(c *gin.Context) {
 		return
 	}
 
-	if err := db.Where("id = ? AND user_id = ?", id, userID).Delete(&cartItem).Error; err != nil {
+	if err := db.Where("product_variant_id = ? AND user_id = ?", id, userID).Delete(&cartItem).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Failed to delete cart item",
 		})

@@ -3,6 +3,7 @@ import axios from 'axios'
 import VButton from '@/components/forms/VButton.vue'
 // import VSelect from '@/components/forms/VSelect.vue'
 import ProductCard from '@/components/ui/VProductCard.vue'
+import VBlockLoader from '@/components/loaders/VBlockLoader.vue'
 export default {
   name: 'CatalogView',
 
@@ -10,6 +11,7 @@ export default {
     ProductCard,
     // VSelect,
     VButton,
+    VBlockLoader,
   },
 
   props: {},
@@ -38,6 +40,8 @@ export default {
         { value: 'date_asc', label: 'По дате ↑', direction: 'asc' },
         { value: 'date_desc', label: 'По дате ↓', direction: 'desc' },
       ],
+
+      isLoading: true,
     }
   },
 
@@ -82,6 +86,23 @@ export default {
         this.categoryLoading = false
       }
     },
+
+    async getProducts() {
+      try {
+        this.isLoading = true
+        const response = await axios.get('http://localhost:8080/products/', {
+          params: {},
+          headers: {
+            Authorization: localStorage.getItem('token'),
+          },
+        })
+        this.products = response.data.products
+      } catch (error) {
+        console.log(error)
+      } finally {
+        this.isLoading = false
+      }
+    },
   },
   computed: {
     cartItemCount() {
@@ -102,6 +123,7 @@ export default {
   },
 
   created() {
+    this.getProducts()
     if (this.$route.query.category) {
       this.getParentCategory(this.$route.query.category)
       this.getCategories(this.$route.query.category)
@@ -121,18 +143,26 @@ export default {
   <div class="flex flex-col gap-10">
     <!-- Каталог  -->
     <div class="grid grid-cols-5 gap-5">
-      <div class="bg-white rounded-lg py-10 px-5 flex flex-col gap-5">
+      <div class="bg-white rounded-lg py-10 px-5 flex flex-col gap-4">
         <div>
           <div class="text-xs text-blue-600 *:duration-200 *:hover:text-blue-400">
-            <RouterLink class="mb-2 block" v-if="categoryBack" :to="'/catalog/?category=' + categoryBack"
+            <RouterLink
+              class="mb-2 block"
+              v-if="categoryBack"
+              :to="'/catalog/?category=' + categoryBack"
               >Назад</RouterLink
             >
-            <RouterLink class="mb-2 block" v-if="categoryBack == null && categoryCurrent != ''" to="/catalog/"
+            <RouterLink
+              class="mb-2 block"
+              v-if="categoryBack == null && categoryCurrent != ''"
+              to="/catalog/"
               >Назад</RouterLink
             >
           </div>
 
-          <div class="text-2xl leading-[120%]" v-if="categoryCurrent != ''">{{ categoryCurrent }}</div>
+          <div class="text-2xl leading-[120%]" v-if="categoryCurrent != ''">
+            {{ categoryCurrent }}
+          </div>
           <div
             class="flex flex-col gap-2"
             :class="subCategories.length > 0 ? 'mt-2' : ''"
@@ -155,7 +185,17 @@ export default {
         <div class="">
           <!-- <VSelect v-model="selectedSort" :options="sortOptions" /> -->
         </div>
-        <div class="grid grid-cols-4 gap-5">
+        <div class="grid grid-cols-4 gap-4" v-if="isLoading">
+          <div v-for="i in 8" :key="i" class="bg-white rounded-lg shadow overflow-hidden flex flex-col justify-start">
+            <VBlockLoader class="w-full !rounded-none aspect-square" />
+
+            <div class="px-4 py-2">
+              <VBlockLoader class="w-full h-4" />
+              <VBlockLoader class="w-2/5 h-4 mt-1" />
+            </div>
+          </div>
+        </div>
+        <div class="grid grid-cols-4 gap-4" v-if="!isLoading">
           <ProductCard
             v-for="product in products"
             :key="product.id"

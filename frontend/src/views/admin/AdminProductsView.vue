@@ -1,5 +1,6 @@
 <script>
 import VButton from '@/components/forms/VButton.vue'
+import VBlockLoader from '@/components/loaders/VBlockLoader.vue'
 import VPopupCreateProduct from '@/components/popups/VPopupCreateProduct.vue'
 import axios from 'axios'
 export default {
@@ -8,6 +9,7 @@ export default {
   components: {
     VButton,
     VPopupCreateProduct,
+    VBlockLoader,
   },
 
   props: {},
@@ -28,8 +30,10 @@ export default {
       isLoading: true,
       currentPage: 1,
       itemsPerPage: 20,
-      moreAvailable: true,
+      moreAvailable: false,
       showCreateProduct: false,
+      isDeleting: false,
+      prevAvailable: false,
     }
   },
 
@@ -45,6 +49,11 @@ export default {
           this.currentPage = 1
           this.products = []
         }
+        if (this.currentPage < 2) {
+          this.prevAvailable = false
+        } else {
+          this.prevAvailable = true
+        }
         this.isLoading = true
         const response = await axios.get('http://localhost:8080/admin/products/', {
           params: {
@@ -55,18 +64,29 @@ export default {
             Authorization: localStorage.getItem('token'),
           },
         })
-        this.products.push(...response.data.products)
+        this.products = response.data.products
         this.$router.replace({
           query: {
             page: this.currentPage,
             limit: this.itemsPerPage,
           },
         })
-        this.moreAvailable = response.data.products.length === this.itemsPerPage
+        if (response.data.products.length === this.itemsPerPage) {
+          this.moreAvailable = true
+        } else {
+          this.moreAvailable = false
+          this.currentPage--
+        }
       } catch (error) {
         console.log(error)
       } finally {
         this.isLoading = false
+      }
+    },
+    loadPreviousProducts() {
+      if (this.currentPage > 1) {
+        this.currentPage--
+        this.getProducts()
       }
     },
     loadMoreProducts() {
@@ -76,18 +96,19 @@ export default {
       }
     },
     async deleteProduct(id) {
+      if (this.isDeleting) return
       try {
-        this.isLoading = true
-        const response = await axios.delete('http://localhost:8080/admin/products/' + id, {
+        this.isDeleting = true
+        await axios.delete('http://localhost:8080/admin/products/' + id, {
           headers: {
             Authorization: localStorage.getItem('token'),
           },
         })
-        console.log(response.data)
+        this.products = this.products.filter((product) => product.id !== id)
       } catch (error) {
         console.log(error)
       } finally {
-        this.isLoading = false
+        this.isDeleting = false
       }
     },
   },
@@ -107,10 +128,69 @@ export default {
 <template>
   <div class="">
     <VPopupCreateProduct v-model="showCreateProduct" />
-    <div class="mb-10">
+    <div class="mb-10" v-if="!isLoading">
       <VButton @click="openCreateProductPopup">Добавить</VButton>
     </div>
 
+    <div v-if="isLoading && !products.length">
+      <table class="w-full">
+        <thead class="">
+          <tr class="text-left">
+            <th v-for="i in tableHeaders" :key="i" class="">
+              <div class="bg-blue-100 py-4 px-2">
+                <VBlockLoader class="w-17 h-5" />
+              </div>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="i in 3" :key="i">
+            <td class="">
+              <div class="flex gap-2">
+                <VBlockLoader class="w-7 h-7" />
+                <!-- <VBlockLoader class="w-7 h-7" /> -->
+                <VBlockLoader class="w-7 h-7" />
+              </div>
+            </td>
+            <td>
+              <div>
+                <VBlockLoader class="w-10 h-4" />
+              </div>
+            </td>
+            <td>
+              <div class="">
+                <VBlockLoader class="w-20 h-20" />
+              </div>
+            </td>
+            <td>
+              <div>
+                <VBlockLoader class="w-25 h-4" />
+              </div>
+            </td>
+            <td>
+              <div class="">
+                <VBlockLoader class="w-20 h-6" />
+              </div>
+            </td>
+            <td>
+              <div>
+                <VBlockLoader class="w-10 h-4" />
+              </div>
+            </td>
+            <td>
+              <div>
+                <VBlockLoader class="w-15 h-4" />
+              </div>
+            </td>
+            <td>
+              <div>
+                <VBlockLoader class="w-10 h-4" />
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
     <table class="w-full" v-if="products.length">
       <thead class="">
         <tr class="text-left">
@@ -136,7 +216,7 @@ export default {
                   />
                 </svg>
               </VButton>
-              <VButton class="!p-2">
+              <!-- <VButton class="!p-2">
                 <svg
                   class="w-5 *:fill-blue-100"
                   viewBox="0 0 24 24"
@@ -148,7 +228,7 @@ export default {
                     fill="black"
                   />
                 </svg>
-              </VButton>
+              </VButton> -->
               <VButton @click="deleteProduct(product.id)" :variant="'danger'" class="!p-2">
                 <svg
                   class="w-5 *:fill-red-100"
@@ -221,14 +301,69 @@ export default {
     </table>
     <div
       class="flex items-center justify-center bg-neutral-200 text-neutral-950 p-10 rounded-xl"
-      v-else
+      v-if="!products.length && !isLoading"
     >
       <div class="font-bold">Товаров нет</div>
     </div>
-    <div v-if="moreAvailable" class="flex justify-center mt-10">
-      <VButton :disabled="isLoading" @click="loadMoreProducts">
-        <span v-if="isLoading">Ожидайте</span><span v-else>Загрузить еще</span>
-      </VButton>
+    <div class="flex justify-center items-center gap-4">
+      <div v-if="prevAvailable" class="flex justify-center mt-10">
+        <VButton :disabled="isLoading" @click="loadPreviousProducts">
+          <span v-if="isLoading" class="animate-spin"
+            ><svg
+              class="w-4 h-4 *:fill-white"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M12 2.25C17.3848 2.25 21.75 6.61522 21.75 12C21.75 17.3848 17.3848 21.75 12 21.75C6.61522 21.75 2.25 17.3848 2.25 12C2.25 10.4448 2.61447 8.97237 3.26367 7.66602C3.44804 7.29514 3.89863 7.1438 4.26953 7.32812C4.6404 7.51249 4.79174 7.96308 4.60742 8.33398C4.05901 9.43754 3.75 10.6816 3.75 12C3.75 16.5563 7.44365 20.25 12 20.25C16.5563 20.25 20.25 16.5563 20.25 12C20.25 7.44365 16.5563 3.75 12 3.75C11.5858 3.75 11.25 3.41421 11.25 3C11.25 2.58579 11.5858 2.25 12 2.25Z"
+                fill="black"
+              />
+            </svg> </span
+          ><span v-else
+            ><svg
+              class="w-4 h-4 *:fill-white"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M13.4697 5.46967C13.7626 5.17678 14.2373 5.17678 14.5302 5.46967C14.8231 5.76256 14.8231 6.23732 14.5302 6.53022L9.06049 11.9999L14.5302 17.4697L14.582 17.5263C14.8223 17.8209 14.8048 18.2556 14.5302 18.5302C14.2556 18.8048 13.8209 18.8223 13.5263 18.582L13.4697 18.5302L7.46967 12.5302C7.17678 12.2373 7.17678 11.7626 7.46967 11.4697L13.4697 5.46967Z"
+                fill="black"
+              />
+            </svg>
+          </span>
+        </VButton>
+      </div>
+      <div v-if="moreAvailable" class="flex justify-center mt-10">
+        <VButton :disabled="isLoading" @click="loadMoreProducts">
+          <span v-if="isLoading" class="animate-spin"
+            ><svg
+              class="w-4 h-4 *:fill-white"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M12 2.25C17.3848 2.25 21.75 6.61522 21.75 12C21.75 17.3848 17.3848 21.75 12 21.75C6.61522 21.75 2.25 17.3848 2.25 12C2.25 10.4448 2.61447 8.97237 3.26367 7.66602C3.44804 7.29514 3.89863 7.1438 4.26953 7.32812C4.6404 7.51249 4.79174 7.96308 4.60742 8.33398C4.05901 9.43754 3.75 10.6816 3.75 12C3.75 16.5563 7.44365 20.25 12 20.25C16.5563 20.25 20.25 16.5563 20.25 12C20.25 7.44365 16.5563 3.75 12 3.75C11.5858 3.75 11.25 3.41421 11.25 3C11.25 2.58579 11.5858 2.25 12 2.25Z"
+                fill="black"
+              />
+            </svg> </span
+          ><span v-else>
+            <svg
+              class="w-4 h-4 *:fill-white"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M9.46984 5.46984C9.74445 5.19524 10.1792 5.17778 10.4737 5.41809L10.5304 5.46984L16.5304 11.4698L16.5821 11.5265C16.8065 11.8014 16.8065 12.1988 16.5821 12.4737L16.5304 12.5304L10.5304 18.5304C10.2375 18.8233 9.76274 18.8233 9.46984 18.5304C9.17695 18.2375 9.17695 17.7627 9.46984 17.4698L14.9396 12.0001L9.46984 6.53039L9.41809 6.47375C9.17778 6.17917 9.19524 5.74445 9.46984 5.46984Z"
+                fill="black"
+              />
+            </svg>
+          </span>
+        </VButton>
+      </div>
     </div>
   </div>
 </template>
