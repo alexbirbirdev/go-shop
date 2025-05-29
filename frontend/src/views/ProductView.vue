@@ -33,6 +33,7 @@ export default {
   },
 
   methods: {
+    ...mapMutations('cart', ['INCREMENT', 'DECREMENT']),
     makeActive(id, price) {
       this.activeVariant = id
       this.activePrice = price
@@ -118,6 +119,7 @@ export default {
             },
           })
           this.activeVariantData.in_cart = false
+          this.$store.commit('cart/DECREMENT')
         } else {
           await axios.post(
             `http://localhost:8080/cart/`,
@@ -131,7 +133,7 @@ export default {
               },
             },
           )
-
+          this.$store.commit('cart/INCREMENT')
           this.activeVariantData.in_cart = true
         }
       } catch (error) {
@@ -155,7 +157,7 @@ export default {
 </script>
 
 <template>
-  <div>
+  <div class="">
     <div class="grid grid-cols-2 gap-10" v-if="isLoading">
       <div class="">
         <VBlockLoader class="w-full aspect-square" />
@@ -229,7 +231,7 @@ export default {
             {{ variant.name }}</span
           >
         </div>
-        <div class="flex gap-2">
+        <div class="flex gap-2 max-w-lg">
           <VButton
             :disabled="cartLoading"
             @click="toggleCart"

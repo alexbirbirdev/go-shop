@@ -12,14 +12,19 @@ export default {
     return {
       favCount: 0,
       isFavLoading: true,
+      isCartLoading: true,
     }
   },
 
   computed: {
-    ...mapGetters('favorites', ['count']),
-    favoritesCount() {
-      return this.count
-    },
+    
+    ...mapGetters('favorites', {
+      favoritesCount: 'count'
+    }),
+    
+    ...mapGetters('cart', {
+      cartCount: 'count'
+    }),
   },
 
   methods: {
@@ -45,12 +50,30 @@ export default {
         this.isFavLoading = false
       }
     },
+    async getCartCount() {
+      try {
+        this.isCartLoading = true
+        const response = await axios.get('http://localhost:8080/cart/count', {
+          headers: {
+            Authorization: localStorage.getItem('token'),
+          },
+        })
+        // this.favCount = response.data.count
+        this.$store.commit('cart/SET_COUNT', response.data.count)
+        // localStorage.setItem('favCount', this.favCount)
+      } catch (error) {
+        console.log(error)
+      } finally {
+        this.isCartLoading = false
+      }
+    },
   },
 
   watch: {},
 
   created() {
     this.getFavCount()
+    this.getCartCount()
   },
   mounted() {},
   updated() {},
@@ -90,7 +113,7 @@ export default {
           </div>
         </router-link>
         <router-link
-          class="duration-200 hover:bg-sky-100 cursor-pointer p-1 rounded-lg bg-neutral-200"
+          class="duration-200 hover:bg-sky-100 cursor-pointer p-1 rounded-lg bg-neutral-200 relative"
           :active-class="'bg-sky-100 !cursor-default'"
           to="/cart/"
         >
@@ -100,6 +123,12 @@ export default {
               fill="black"
             />
           </svg>
+          <div
+            v-if="!isCartLoading && cartCount != 0"
+            class="absolute -top-2 -right-2 py-0.5 px-2 text-xs bg-sky-200 shadow-xl rounded-md"
+          >
+            {{ cartCount }}
+          </div>
         </router-link>
         <router-link
           class="duration-200 hover:bg-sky-100 cursor-pointer p-1 rounded-lg bg-neutral-200"

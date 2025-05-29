@@ -117,6 +117,29 @@ func GetCartItems(c *gin.Context) {
 		"total":      totalPrice,
 	})
 }
+func GetCartNumber(c *gin.Context) {
+	db := config.DB
+	userID, ok := utils.GetUserID(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "Unauthorized",
+		})
+		return
+	}
+
+	var totalQuantity int64
+
+	if err := db.
+		Model(&models.CartItem{}).
+		Where("user_id = ?", userID).
+		Select("COALESCE(SUM(quantity), 0)").
+		Scan(&totalQuantity).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при подсчёте"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"count": totalQuantity})
+}
 
 func DeleteCartItem(c *gin.Context) {
 	db := config.DB

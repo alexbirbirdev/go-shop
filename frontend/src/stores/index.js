@@ -1,9 +1,11 @@
 import Vuex from 'vuex';
 import favorites from './modules/favorites';
+import cart from './modules/cart';
 
 export default new Vuex.Store({
     modules: {
         favorites,
+        cart,
     },
     state: {
         isAuth: false,

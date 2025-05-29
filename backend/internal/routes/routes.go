@@ -33,9 +33,10 @@ func SetupRoutes(r *gin.Engine) {
 		cartItemRoutes.DELETE("/:id", handlers.DeleteCartItem)
 		cartItemRoutes.DELETE("/clear", handlers.ClearCart)
 		cartItemRoutes.PUT("/:id", handlers.UpdateQuantity)
-		cartItemRoutes.POST("/:id/increment", handlers.IncrementCartItem)
-		cartItemRoutes.POST("/:id/decrement", handlers.DecrementCartItem)
+		cartItemRoutes.POST("/increment/:id", handlers.IncrementCartItem)
+		cartItemRoutes.POST("/decrement/:id", handlers.DecrementCartItem)
 		cartItemRoutes.GET("/:id/check", handlers.CheckInCart)
+		cartItemRoutes.GET("/count", handlers.GetCartNumber)
 	}
 
 	orderRoutes := r.Group("/orders").Use(middleware.AuthMiddleware())

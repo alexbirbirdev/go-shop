@@ -33,6 +33,7 @@ export default {
           },
         })
         this.products = []
+        this.$store.commit('favorites/SET_COUNT', 0)
       } catch (error) {
         console.log(error)
       }
@@ -60,7 +61,7 @@ export default {
       this.DECREMENT()
       this.products = this.products.filter((p) => p.variant_id !== deletedVariantId)
     },
-    ...mapMutations('favorites', ['INCREMENT', 'DECREMENT']),
+    ...mapMutations('favorites', ['INCREMENT', 'DECREMENT', 'SET_COUNT']),
   },
 
   watch: {},
