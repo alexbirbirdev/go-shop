@@ -1,4 +1,6 @@
 <script>
+import { mapGetters } from 'vuex'
+import axios from 'axios'
 export default {
   name: 'VHeader',
 
@@ -7,16 +9,49 @@ export default {
   props: {},
 
   data() {
-    return {}
+    return {
+      favCount: 0,
+      isFavLoading: true,
+    }
   },
 
-  computed: {},
+  computed: {
+    ...mapGetters('favorites', ['count']),
+    favoritesCount() {
+      return this.count
+    },
+  },
 
-  methods: {},
+  methods: {
+    // ...mapMutations('favorites', ['SET_COUNT']),
+    // setFavCount() {
+    //   this.SET_COUNT(state.count, favCount)
+    // },
+
+    async getFavCount() {
+      try {
+        this.isFavLoading = true
+        const response = await axios.get('http://localhost:8080/favorites/count', {
+          headers: {
+            Authorization: localStorage.getItem('token'),
+          },
+        })
+        // this.favCount = response.data.count
+        this.$store.commit('favorites/SET_COUNT', response.data.count)
+        // localStorage.setItem('favCount', this.favCount)
+      } catch (error) {
+        console.log(error)
+      } finally {
+        this.isFavLoading = false
+      }
+    },
+  },
 
   watch: {},
 
-  created() {},
+  created() {
+    this.getFavCount()
+  },
   mounted() {},
   updated() {},
   beforeUnmount() {},
@@ -27,7 +62,7 @@ export default {
 <template>
   <header class="bg-white shadow-sm py-4 fixed top-0 left-0 w-full z-20 flex justify-center">
     <div class="container flex justify-between items-center">
-      <h1 class="text-xl font-bold">GO Shop</h1>
+      <router-link to="/"><h1 class="text-xl font-bold">GO Shop</h1></router-link>
       <nav class="flex items-center gap-3">
         <router-link
           class="duration-200 hover:text-blue-500 cursor-pointer"
@@ -37,7 +72,7 @@ export default {
         >
 
         <router-link
-          class="duration-200 hover:bg-sky-100 cursor-pointer p-1 rounded-lg bg-neutral-200"
+          class="duration-200 hover:bg-sky-100 cursor-pointer p-1 rounded-lg bg-neutral-200 relative"
           :active-class="'bg-sky-100 !cursor-default'"
           to="/favorite/"
         >
@@ -47,6 +82,12 @@ export default {
               fill="black"
             />
           </svg>
+          <div
+            v-if="!isFavLoading && favoritesCount != 0"
+            class="absolute -top-2 -right-2 py-0.5 px-2 text-xs bg-sky-200 shadow-xl rounded-md"
+          >
+            {{ favoritesCount }}
+          </div>
         </router-link>
         <router-link
           class="duration-200 hover:bg-sky-100 cursor-pointer p-1 rounded-lg bg-neutral-200"

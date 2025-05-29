@@ -74,6 +74,7 @@ func SetupRoutes(r *gin.Engine) {
 		favoriteRoutes.GET("/:id", handlers.CheckFavorite)
 		favoriteRoutes.DELETE("/:id", handlers.DeleteFavorite)
 		favoriteRoutes.DELETE("/", handlers.ClearFavorites)
+		favoriteRoutes.GET("/count", handlers.GetFavoritesNumber)
 	}
 
 	// Возможности админа

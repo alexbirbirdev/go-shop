@@ -1,6 +1,10 @@
 import Vuex from 'vuex';
+import favorites from './modules/favorites';
 
 export default new Vuex.Store({
+    modules: {
+        favorites,
+    },
     state: {
         isAuth: false,
         token: '',

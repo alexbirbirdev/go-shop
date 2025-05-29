@@ -239,3 +239,23 @@ func CheckFavorite(c *gin.Context) {
 		"exists": true,
 	})
 }
+
+func GetFavoritesNumber(c *gin.Context) {
+	db := config.DB
+	userID, ok := utils.GetUserID(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "Unauthorized",
+		})
+		return
+	}
+
+	var counter int64
+	if err := db.Model(&models.Favorite{}).Where("user_id = ?", userID).Count(&counter).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при подсчете"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"count": counter})
+
+}

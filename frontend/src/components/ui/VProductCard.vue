@@ -36,13 +36,13 @@ export default {
         v-if="!product.images.length"
         src="https://placehold.co/600x400"
         :alt="product.name"
-        class="w-full h-48 object-cover"
+        class="w-full aspect-square object-cover"
       />
       <img
         v-else
         :src="product.images[0].image_url"
         :alt="product.name"
-        class="w-full h-48 object-cover"
+        class="w-full aspect-square object-cover"
       />
     </router-link>
 

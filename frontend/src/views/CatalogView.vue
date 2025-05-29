@@ -46,8 +46,8 @@ export default {
   },
 
   methods: {
-    addToCart(product) {
-      this.cart.push(product)
+    addToCart() {
+      
     },
     sortProducts(sortOption) {
       console.log('Сортировка по:', sortOption)

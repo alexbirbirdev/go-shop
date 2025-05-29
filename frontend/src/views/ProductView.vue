@@ -1,4 +1,5 @@
 <script>
+import { mapMutations } from 'vuex'
 import axios from 'axios'
 import VButton from '@/components/forms/VButton.vue'
 import VBlockLoader from '@/components/loaders/VBlockLoader.vue'
@@ -36,7 +37,7 @@ export default {
       this.activeVariant = id
       this.activePrice = price
     },
-
+    ...mapMutations('favorites', ['INCREMENT', 'DECREMENT']),
     async getProduct() {
       try {
         this.isLoading = true
@@ -78,6 +79,7 @@ export default {
               Authorization: localStorage.getItem('token'),
             },
           })
+          this.DECREMENT()
           this.activeVariantData.is_fav = false
         } else {
           await axios.post(
@@ -91,6 +93,7 @@ export default {
               },
             },
           )
+          this.INCREMENT()
           this.activeVariantData.is_fav = true
         }
       } catch (error) {
@@ -128,6 +131,7 @@ export default {
               },
             },
           )
+
           this.activeVariantData.in_cart = true
         }
       } catch (error) {
@@ -168,8 +172,7 @@ export default {
           <VBlockLoader class="w-1/2 h-4" />
         </div>
         <div class="flex flex-wrap gap-2">
-          <VBlockLoader class="w-12 h-10 odd:w-16" v-for="variant in 5"
-            :key="variant" />
+          <VBlockLoader class="w-12 h-10 odd:w-16" v-for="variant in 5" :key="variant" />
         </div>
         <div class="flex gap-2">
           <VBlockLoader class="flex-1 h-10" />
@@ -278,7 +281,7 @@ export default {
             :disabled="favLoading"
             :class="activeVariantData?.is_fav ? 'bg-red-200' : 'bg-neutral-200'"
             @click="toggleFavorite"
-            class="w-10 h-10 p-2 bg-neutral-200 rounded-lg flex items-center justify-center"
+            class="w-10 h-10 p-2 bg-neutral-200 cursor-pointer rounded-lg flex items-center justify-center"
           >
             <svg
               v-if="favLoading"
