@@ -42,6 +42,7 @@ export default {
         })
 
         localStorage.setItem('token', response.data.token, response.data.token)
+        localStorage.setItem('role', response.data.role, response.data.role)
 
         if (this.$store) {
           this.$store.commit('SET_AUTH', {

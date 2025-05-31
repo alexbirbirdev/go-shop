@@ -34,6 +34,7 @@ export default {
     // },
 
     async getFavCount() {
+      if (!localStorage.getItem("role")) return
       try {
         this.isFavLoading = true
         const response = await axios.get('http://localhost:8080/favorites/count', {
@@ -51,6 +52,7 @@ export default {
       }
     },
     async getCartCount() {
+      if (!localStorage.getItem("role")) return
       try {
         this.isCartLoading = true
         const response = await axios.get('http://localhost:8080/cart/count', {

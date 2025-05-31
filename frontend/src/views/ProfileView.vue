@@ -105,6 +105,7 @@ export default {
     },
     logout() {
       localStorage.removeItem('token')
+      localStorage.removeItem('role')
       this.$store.commit('SET_AUTH', false)
       this.$router.push('/auth/signin')
     },

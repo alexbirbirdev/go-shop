@@ -68,6 +68,10 @@ export default {
     async toggleFavorite() {
       if (!this.activeVariantData) return
       if (this.favLoading) return
+      if (!localStorage.getItem("role")) {
+        this.$router.push('/auth/signin?redirect=/catalog/' + this.product.id)
+        return
+      }
 
       const variantId = this.activeVariantData.id
       const isFav = this.activeVariantData.is_fav
@@ -106,6 +110,10 @@ export default {
     async toggleCart() {
       if (!this.activeVariantData) return
       if (this.cartLoading) return
+      if (!localStorage.getItem("role")) {
+        this.$router.push('/auth/signin?redirect=/catalog/' + this.product.id)
+        return
+      }
 
       const variantId = this.activeVariantData.id
       const inCart = this.activeVariantData.in_cart
