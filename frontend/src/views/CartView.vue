@@ -319,7 +319,9 @@ export default {
             <div class="text-xl font-bold">Итого:</div>
             <div class="">{{ total }} ₽</div>
           </div>
-          <VButton>Оформить заказ</VButton>
+          <router-link to="/checkout">
+            <VButton class="w-full">Оформить заказ</VButton>
+          </router-link>
         </div>
       </div>
     </div>

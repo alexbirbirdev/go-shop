@@ -165,7 +165,7 @@ export default {
 </script>
 
 <template>
-  <div class="">
+  <div class="max-w-4xl mx-auto">
     <div class="grid grid-cols-2 gap-10" v-if="isLoading">
       <div class="">
         <VBlockLoader class="w-full aspect-square" />

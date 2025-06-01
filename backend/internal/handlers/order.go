@@ -59,11 +59,30 @@ func CreateOrder(c *gin.Context) {
 		orderItems = append(orderItems, orderItem)
 	}
 
+	var input struct {
+		Address    string `json:"address" binding:"required"`
+		AddressCom string `json:"address_com" binding:"required"`
+		Phone      string `json:"phone" binding:"required"`
+		FirstName  string `json:"first_name" binding:"required"`
+		LastName   string `json:"last_name" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Invalid input",
+		})
+		return
+	}
+
 	order := models.Order{
 		UserID:     uint(userID),
 		TotalPrice: total,
 		Status:     "pending",
 		OrderItems: orderItems,
+		Address:    input.Address,
+		AddressCom: input.AddressCom,
+		Phone:      input.Phone,
+		FirstName:  input.FirstName,
+		LastName:   input.LastName,
 	}
 
 	if err := db.Create(&order).Error; err != nil {

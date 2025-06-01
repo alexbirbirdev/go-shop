@@ -7,6 +7,7 @@ import SignInView from '@/views/auth/SignInView.vue'
 import SignUpView from '@/views/auth/SignUpView.vue'
 import CartView from '@/views/CartView.vue'
 import CatalogView from '@/views/CatalogView.vue'
+import CheckoutView from '@/views/CheckoutView.vue'
 import FavoriteView from '@/views/FavoriteView.vue'
 import OrderDetailView from '@/views/OrderDetailView.vue'
 import OrdersView from '@/views/OrdersView.vue'
@@ -54,6 +55,14 @@ const router = createRouter({
       path: '/profile',
       name: 'profile',
       component: ProfileView,
+      meta: {
+        requiresAuth: true,
+      },
+    },
+    {
+      path: '/checkout',
+      name: 'checkout',
+      component: CheckoutView,
       meta: {
         requiresAuth: true,
       },

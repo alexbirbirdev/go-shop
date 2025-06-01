@@ -110,6 +110,10 @@ export default {
       this.$router.push('/auth/signin')
     },
     async getProfile() {
+      if (!localStorage.getItem("role")) {
+        this.$router.push('/auth/signin?redirect=/profile/')
+        return
+      }
       try {
         this.loadingProfile = true
         const response = await axios.get('http://localhost:8080/profile/', {
