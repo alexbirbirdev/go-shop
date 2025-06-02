@@ -113,7 +113,7 @@ export default {
     async handleForm() {
       try {
         this.isLoading = true
-        const response = await axios.post(
+        await axios.post(
           'http://localhost:8080/orders/',
           {
             address: this.form.address,
@@ -129,7 +129,7 @@ export default {
           },
         )
         this.$store.commit('cart/SET_COUNT', 0)
-          this.$router.push('/orders')
+        this.$router.push('/orders')
       } catch (error) {
         console.log(error)
       } finally {
