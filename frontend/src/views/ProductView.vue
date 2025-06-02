@@ -219,9 +219,10 @@ export default {
         </div>
       </div>
       <div class="flex flex-col gap-4">
-        <div class="text-4xl font-bold">{{ product.name }}</div>
-        <div class="text-2xl">{{ activePrice }} ₽</div>
-        <div class="">
+        <div class="text-4xl font-bold" :class="!product.stock ? 'text-gray-400' : ''">{{ product.name }}</div>
+        <div class="text-2xl " v-if="!product.stock">Нет в наличии</div>
+        <div class="text-2xl" v-else>{{ activePrice }} ₽</div>
+        <div class="" :class="!product.stock ? 'text-gray-400' : ''">
           {{ product.description }}
         </div>
         <div class="flex flex-wrap gap-2">
@@ -239,7 +240,7 @@ export default {
             {{ variant.name }}</span
           >
         </div>
-        <div class="flex gap-2 max-w-lg">
+        <div class="flex gap-2 max-w-lg" v-if="product.stock">
           <VButton
             :disabled="cartLoading"
             @click="toggleCart"

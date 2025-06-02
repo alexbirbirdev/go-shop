@@ -28,7 +28,6 @@ export default {
           },
         })
         this.orders = response.data.orders
-        console.log(response)
       } catch (error) {
         console.log(error)
       } finally {
