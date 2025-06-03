@@ -11,12 +11,33 @@ export default {
     return {
       orders: [],
       isLoading: true,
+      statusOptions: ['pending', 'processing', 'shipped', 'completed', 'cancelled'],
+      isUpdating: false,
     }
   },
 
   computed: {},
 
   methods: {
+    async updateOrderStatus(orderId, newStatus) {
+      if (this.isUpdating) return
+      try {
+        this.isUpdating = true
+        await axios.put(
+          `http://localhost:8080/admin/orders/${orderId}/status`,
+          { status: newStatus },
+          {
+            headers: {
+              Authorization: localStorage.getItem('token'),
+            },
+          },
+        )
+      } catch (error) {
+        console.error(`Ошибка при обновлении статуса заказа ${orderId}:`, error)
+      } finally {
+        this.isUpdating = false
+      }
+    },
     async getOrders() {
       try {
         this.isLoading = true
@@ -58,10 +79,19 @@ export default {
           <div class="w-full p-4 bg-neutral-100">
             <div class="flex items-center justify-between">
               <div class="">
-                Заказ №<span class="font-bold">{{ order.ID }}</span> от <span class="font-bold">{{ order.CreatedAt }}</span>
+                Заказ №<span class="font-bold">{{ order.ID }}</span> от
+                <span class="font-bold">{{ order.CreatedAt }}</span>
               </div>
               <div class="">
-                {{ order.status }}
+                <select
+                  class="px-2 py-1 rounded border border-neutral-300 text-sm"
+                  v-model="order.status"
+                  @change="updateOrderStatus(order.ID, order.status)"
+                >
+                  <option v-for="status in statusOptions" :key="status" :value="status">
+                    {{ status }}
+                  </option>
+                </select>
               </div>
             </div>
             <div class="grid grid-cols-2 gap-10 mt-2">
