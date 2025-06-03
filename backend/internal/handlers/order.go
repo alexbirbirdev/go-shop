@@ -214,7 +214,13 @@ func AdminGetOrders(c *gin.Context) {
 	db := config.DB
 
 	var orders []models.Order
-	if err := db.Preload("OrderItems").Find(&orders).Error; err != nil {
+	if err := db.Order("created_at DESC").
+		Preload("OrderItems").
+		Preload("OrderItems.ProductVariant").
+		Preload("OrderItems.ProductVariant.Product").
+		Preload("OrderItems.ProductVariant.Product.Images", func(db *gorm.DB) *gorm.DB {
+			return db.Order("sort_order ASC")
+		}).Find(&orders).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Failed to fetch orders",
 		})

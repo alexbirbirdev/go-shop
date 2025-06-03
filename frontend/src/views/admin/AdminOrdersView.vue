@@ -1,32 +1,140 @@
 <script>
+import axios from 'axios'
 export default {
-  name: 'YourComponentName',
+  name: 'AdminOrders',
 
   components: {},
 
   props: {},
 
   data() {
-    return {};
+    return {
+      orders: [],
+      isLoading: true,
+    }
   },
 
   computed: {},
 
-  methods: {},
+  methods: {
+    async getOrders() {
+      try {
+        this.isLoading = true
+        const response = await axios.get('http://localhost:8080/admin/orders/', {
+          headers: {
+            Authorization: localStorage.getItem('token'),
+          },
+        })
+        this.orders = response.data.orders
+      } catch (error) {
+        console.log(error)
+      } finally {
+        this.isLoading = false
+      }
+    },
+  },
 
   watch: {},
 
-  created() {},
+  created() {
+    this.getOrders()
+  },
   mounted() {},
   updated() {},
   beforeUnmount() {},
   unmounted() {},
-};
+}
 </script>
 
 <template>
   <div>
-    Orders
+    <div class="">
+      <div class="grid gap-6" v-if="!isLoading && orders.length">
+        <div
+          class="shadow rounded-xl duration-200 hover:shadow-lg"
+          v-for="order in orders"
+          :key="order"
+        >
+          <div class="w-full p-4 bg-neutral-100">
+            <div class="flex items-center justify-between">
+              <div class="">
+                Заказ №<span class="font-bold">{{ order.ID }}</span> от <span class="font-bold">{{ order.CreatedAt }}</span>
+              </div>
+              <div class="">
+                {{ order.status }}
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-10 mt-2">
+              <div class="flex flex-col gap-2">
+                <div class="text-base font-medium">Получатель</div>
+                <div class="grid gap-2 grid-cols-2">
+                  <div class="grid">
+                    <div class="text-xs text-gray-500">Телефон</div>
+                    <div class="text-xs">{{ order.phone }}</div>
+                  </div>
+                  <div class="grid">
+                    <div class="text-xs text-gray-500">Имя, фамилия</div>
+                    <div class="text-xs">{{ order.first_name }} {{ order.last_name }}</div>
+                  </div>
+                </div>
+              </div>
+              <div class="flex flex-col gap-2">
+                <div class="text-base font-medium">Адрес доставки</div>
+                <div class="grid gap-2 grid-cols-2">
+                  <div class="grid">
+                    <div class="text-xs text-gray-500">Адрес</div>
+                    <div class="text-xs">{{ order.address }}</div>
+                  </div>
+                  <div class="grid">
+                    <div class="text-xs text-gray-500">Комментарий</div>
+                    <div class="text-xs">{{ order.address_com }}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="p-4 grid gap-2 grid-cols-6">
+            <div
+              class="flex flex-col items-start gap-1"
+              v-for="product in order.order_items"
+              :key="product"
+            >
+              <div
+                class="aspect-square flex items-center select-none justify-center border-2 border-neutral-300 rounded-lg overflow-hidden"
+              >
+                <img
+                  v-if="!product.product_variant.Product.images.length"
+                  src="https://placehold.co/600x400"
+                  :alt="product.product_variant.Product.name"
+                  class="max-h-full max-w-full"
+                />
+                <img
+                  v-else
+                  :src="product.product_variant.Product.images[0].image_url"
+                  :alt="product.product_variant.Product.name"
+                  class="max-h-full max-w-full"
+                />
+              </div>
+              <div class="flex items-center justify-between w-full *:text-[10px]">
+                <span
+                  class="py-1 px-2 rounded-2xl duration-200 select-none bg-neutral-200 text-neutral-900"
+                >
+                  {{ product.product_variant.name }}</span
+                >
+                <div class="leading-[120%]">
+                  <strong>{{ product.stock }}</strong> шт
+                </div>
+                <div class="leading-[120%]">
+                  <strong>{{ product.price }}</strong> ₽
+                </div>
+              </div>
+
+              <div class="text-xs leading-[120%]">{{ product.product_variant.Product.name }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
