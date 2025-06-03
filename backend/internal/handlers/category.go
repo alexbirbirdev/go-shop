@@ -204,19 +204,21 @@ func UpdateCategory(c *gin.Context) {
 		return
 	}
 	// Check if the category name already exists
-	if input.Name == "" {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "Category name is required",
-		})
-		return
-	}
+	// if input.Name == "" {
+	// 	c.JSON(http.StatusBadRequest, gin.H{
+	// 		"error": "Category name is required",
+	// 	})
+	// 	return
+	// }
 
-	var existingCategory models.Category
-	if err := db.Where("name = ?", input.Name).First(&existingCategory).Error; err == nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "Category with this name already exists",
-		})
-		return
+	if input.Name != "" {
+		var existingCategory models.Category
+		if err := db.Where("name = ?", input.Name).First(&existingCategory).Error; err == nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": "Category with this name already exists",
+			})
+			return
+		}
 	}
 
 	if err := db.Model(&category).Updates(input).Error; err != nil {

@@ -109,6 +109,8 @@ const router = createRouter({
       path: '/admin',
       name: 'admin',
       component: AdminView,
+
+      redirect: '/admin/products/',
       meta: {
         requiresAuth: true,
         adminPage: true,
