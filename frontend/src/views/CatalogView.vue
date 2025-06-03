@@ -48,10 +48,12 @@ export default {
         price_max: null,
       },
 
-      currentPage: 1,
-      itemsPerPage: 2,
-      moreAvailable: false,
+      currentPage: null,
+      itemsPerPage: 20,
+      moreAvailable: true,
       prevAvailable: false,
+      
+      noMore: false,
     }
   },
 
@@ -110,7 +112,7 @@ export default {
       if (this.isLoading) return
       try {
         this.isLoading = true
-        if (this.currentPage < 2) {
+        if (this.$route.query.page < 2) {
           this.prevAvailable = false
         } else {
           this.prevAvailable = true
@@ -121,7 +123,7 @@ export default {
             price_max: this.$route.query.price_max,
             category: this.$route.query.category || null,
             sort: this.$route.query.sort || null,
-            page: this.currentPage,
+            page: this.$route.query.page || 1,
             limit: this.itemsPerPage,
           },
           headers: {
@@ -129,20 +131,27 @@ export default {
           },
         })
         this.products = response.data.products
-        this.$router.replace({
-          query: {
-            page: this.currentPage,
-            limit: this.itemsPerPage,
-          },
-        })
-        if (response.data.products.length === this.itemsPerPage) {
-          this.moreAvailable = true
-        } else if (response.data.products.length != this.itemsPerPage && this.currentPage == 1) {
+        this.moreAvailable = response.data.products.length === this.itemsPerPage
+
+        if (this.products.length == 0) {
+          this.noMore = true
           this.moreAvailable = false
-          this.currentPage = 1
-        } else {
-          this.moreAvailable = false
-          this.currentPage--
+          this.$router.replace({
+            query: {
+              ...this.$route.query,
+              page: this.currentPage - 1,
+            },
+          })
+        }
+        if (this.moreAvailable) {
+          if (this.currentPage !== parseInt(this.$route.query.page)) {
+            this.$router.replace({
+              query: {
+                ...this.$route.query,
+                page: this.currentPage,
+              },
+            })
+          }
         }
       } catch (error) {
         console.log(error)
@@ -150,19 +159,21 @@ export default {
         this.isLoading = false
       }
     },
-    loadPreviousProducts() {
-      if (this.currentPage > 1 && this.prevAvailable && !this.isLoading) {
-        this.currentPage--
-        this.getProducts()
-      }
-    },
     loadMoreProducts() {
       if (this.moreAvailable && !this.isLoading) {
-        this.currentPage++
-        this.getProducts()
+        const nextPage = this.currentPage + 1
+        this.$router.push({ query: { ...this.$route.query, page: nextPage } })
+      }
+    },
+    loadPreviousProducts() {
+      if (this.currentPage > 1 && this.prevAvailable && !this.isLoading) {
+        const prevPage = this.currentPage - 1
+        this.noMore = false
+        this.$router.push({ query: { ...this.$route.query, page: prevPage } })
       }
     },
     handleFilters() {
+      this.noMore = false
       const query = {
         ...this.$route.query,
         price_min: this.filters.price_min,
@@ -182,6 +193,8 @@ export default {
       this.filters.price_min = null
       this.filters.price_max = null
 
+      this.noMore = false
+
       const query = { ...this.$route.query }
       delete query.price_min
       delete query.price_max
@@ -189,11 +202,7 @@ export default {
       this.$router.push({ path: '/catalog', query })
     },
   },
-  computed: {
-    cartItemCount() {
-      return this.cart.length
-    },
-  },
+  computed: {},
 
   watch: {
     selectedSort(newVal) {
@@ -206,6 +215,7 @@ export default {
       this.getParentCategory(newVal)
       this.getCategories(newVal)
       this.categoryParentName = ''
+      this.noMore = false
       this.getProducts()
     },
 
@@ -221,16 +231,24 @@ export default {
       },
       immediate: true,
     },
+    '$route.query.page': {
+      handler(newVal) {
+        const page = parseInt(newVal)
+        this.currentPage = isNaN(page) || page < 1 ? 1 : page
+        this.getProducts()
+      },
+      immediate: true,
+    },
   },
 
   created() {
     const query = this.$route.query
-
-    // Загружаем фильтры из URL
+    const page = parseInt(query.page)
+    this.currentPage = isNaN(page) || page < 1 ? 1 : page
     this.filters.price_min = query.price_min || null
     this.filters.price_max = query.price_max || null
 
-    this.getProducts()
+    // this.getProducts()
 
     if (query.category) {
       this.getParentCategory(query.category)
@@ -317,7 +335,7 @@ export default {
           <ProductCard v-for="product in products" :key="product.id" :product="product" />
         </div>
         <div
-          v-if="!products.length && !isLoading"
+          v-if="!products.length && !isLoading && $route.query.page == 1"
           class="w-full p-5 text-2xl flex items-center gap-4 flex-col justify-center bg-neutral-200 rounded-2xl text-center"
         >
           Товаров нет :( <br />
@@ -367,8 +385,8 @@ export default {
               </span>
             </VButton>
           </div>
-          <div v-if="moreAvailable" class="flex justify-center mt-10">
-            <VButton :disabled="isLoading" @click="loadMoreProducts">
+          <div v-if="moreAvailable && !noMore" class="flex justify-center mt-10">
+            <VButton :disabled="isLoading || !moreAvailable" @click="loadMoreProducts">
               <span v-if="isLoading" class="animate-spin"
                 ><svg
                   class="w-4 h-4 *:fill-white"
