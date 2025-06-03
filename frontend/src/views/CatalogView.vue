@@ -112,7 +112,7 @@ export default {
       if (this.isLoading) return
       try {
         this.isLoading = true
-        if (this.$route.query.page < 2) {
+        if (!this.$route.query.page || this.$route.query.page < 2) {
           this.prevAvailable = false
         } else {
           this.prevAvailable = true

@@ -110,7 +110,7 @@ export default {
       this.$router.push('/auth/signin')
     },
     async getProfile() {
-      if (!localStorage.getItem("role")) {
+      if (!localStorage.getItem('role')) {
         this.$router.push('/auth/signin?redirect=/profile/')
         return
       }
@@ -193,15 +193,11 @@ export default {
       console.log(this.editForm.ID)
       try {
         this.loadingAddress = true
-        await axios.put(
-          'http://localhost:8080/user-addresses/' + this.editForm.ID,
-          this.editForm,
-          {
-            headers: {
-              Authorization: localStorage.getItem('token'),
-            },
+        await axios.put('http://localhost:8080/user-addresses/' + this.editForm.ID, this.editForm, {
+          headers: {
+            Authorization: localStorage.getItem('token'),
           },
-        )
+        })
 
         this.isEditPopupVisible = false
         this.getAddresses()
@@ -259,6 +255,11 @@ export default {
         console.log(error)
       }
     },
+    makeSomething() {
+      if (localStorage.getItem("role") === "admin") {
+        this.$router.push("/admin")
+      }
+    }
   },
 
   watch: {},
@@ -275,7 +276,7 @@ export default {
 </script>
 
 <template>
-  <div class="flex flex-col gap-10">
+  <div class="flex flex-col gap-10 max-w-xl mx-auto">
     <div
       v-if="showUpdateProfile"
       class="bg-zinc-950/80 min-h-screen w-full fixed top-0 left-0 z-10 p-4 flex items-center justify-center"
@@ -519,9 +520,7 @@ export default {
               />
             </div>
             <div>
-              <label
-                for="editFormApartment"
-                class="block text-sm font-medium text-gray-700"
+              <label for="editFormApartment" class="block text-sm font-medium text-gray-700"
                 >Введите квартиру</label
               >
               <input
@@ -586,7 +585,7 @@ export default {
             <VBlockLoader v-if="loadingProfile || loadingUpdateProfile" :class="'w-30 h-5'" />
             <h1 v-else class="text-xl font-bold leading-[120%]">{{ fullName }}</h1>
             <VBlockLoader v-if="loadingProfile" :class="'w-15 h-4'" />
-            <p v-else class="text-indigo-100 leading-[120%]">{{ role }}</p>
+            <p v-else class="text-indigo-100 leading-[120%]" @click="makeSomething">{{ role }}</p>
           </div>
         </div>
       </div>
@@ -622,37 +621,56 @@ export default {
         <div v-if="loadingAddress" class="grid grid-cols-3 gap-2">
           <VBlockLoader v-for="i in 6" :key="i" class="h-40" />
         </div>
-        <div v-else class="grid grid-cols-3 gap-2">
+        <div v-else class="grid grid-cols-1 gap-2">
+          <div
+            @click="showCreateForm"
+            class="p-3 flex items-center justify-center bg-white rounded-xl border border-green-500 text-green-600 duration-200 hover:bg-green-100 cursor-pointer"
+          >
+            <span>Добавить адрес</span>
+          </div>
           <div
             v-for="ad in addresses"
             :key="ad.id"
-            class="flex flex-col justify-between gap-2 bg-white rounded-xl p-4"
+            class="flex justify-between gap-2 bg-white rounded-xl p-4 flex-wrap"
             :class="ad.is_default ? 'shadow-2xl' : ''"
           >
             <div class="">
+              <VButton @click="openEditPopup(ad)" class="!p-1" :variant="'warning'"
+                ><svg
+                  class="w-5 *:fill-yellow-50"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M16.3536 3.62637C17.3977 2.84437 18.8664 2.90049 19.8497 3.79433L20.0304 3.97012L20.2071 4.15078L20.3741 4.35391C21.1037 5.32827 21.1038 6.67257 20.3741 7.64687L20.2061 7.85C20.1591 7.9017 20.1037 7.95731 20.0304 8.03066L10.0977 17.9643C9.44111 18.6209 8.999 19.0684 8.50887 19.391L8.295 19.5219C7.85843 19.769 7.38303 19.9193 6.73836 20.0873L6.0323 20.265L4.18172 20.7279C3.9263 20.7917 3.65601 20.7168 3.4698 20.5307C3.28365 20.3445 3.20888 20.0742 3.27254 19.8187L3.73543 17.9682C3.99274 16.9389 4.14915 16.2875 4.47859 15.7055L4.60945 15.4916C4.93203 15.0015 5.37958 14.5594 6.03621 13.9027L15.9698 3.97012L16.1505 3.79433L16.3536 3.62637ZM7.09773 14.9643C6.39196 15.67 6.07294 15.9949 5.86629 16.309L5.78426 16.4437C5.5782 16.8078 5.46716 17.2258 5.19051 18.3324L5.03035 18.9691L5.66805 18.81L6.37898 18.6293C6.98023 18.4718 7.28368 18.3708 7.55672 18.2162L7.69148 18.1342C8.00561 17.9275 8.33045 17.6085 9.03621 16.9027L16.8927 9.04629C16.007 8.70051 15.2988 7.99262 14.9532 7.10683L7.09773 14.9643ZM18.8409 4.90371C18.394 4.49763 17.7265 4.47234 17.252 4.82754L17.1593 4.90371L17.0304 5.03066L16.2227 5.8373C16.1985 6.91367 17.0868 7.80025 18.1632 7.77578L18.9698 6.97012C19.0553 6.88467 19.0798 6.85988 19.0968 6.84121L19.1729 6.74941C19.5049 6.30645 19.5048 5.69439 19.1729 5.25137L19.0968 5.15957L18.9698 5.03066L18.8409 4.90371Z"
+                    fill="black"
+                  />
+                </svg>
+              </VButton>
+            </div>
+            <div class="flex-1">
               <div class="text-md">{{ ad.title }}</div>
               <div class="text-gray-400">
                 {{ ad.city }}, {{ ad.street }}, {{ ad.house }}, {{ ad.apartment }}, {{ ad.floor }}
               </div>
             </div>
-
-            <div class="grid grid-cols-2 gap-2 *:text-xs">
-              <VButton v-if="!ad.is_default" @click="deleteAddress(ad.ID)" :variant="'danger'"
-                >Удалить</VButton
-              >
-              <VButton v-if="!ad.is_default" @click="makeDefaultAddress(ad.ID)"
-                >Сделать основным</VButton
-              >
-              <VButton @click="openEditPopup(ad)" class="col-span-2" :variant="'warning'"
-                >Изменить</VButton
-              >
+            <div class="w-full flex justify-start gap-2">
+              <div class="grid grid-cols-2 gap-2 *:text-xs">
+                <VButton
+                  v-if="!ad.is_default"
+                  @click="deleteAddress(ad.ID)"
+                  class="bg-neutral-200 !text-neutral-800 hover:!text-blue-100"
+                  >Удалить</VButton
+                >
+                <VButton
+                  v-if="!ad.is_default"
+                  @click="makeDefaultAddress(ad.ID)"
+                  class="bg-neutral-200 !text-neutral-800 hover:!text-blue-100"
+                  >Сделать основным</VButton
+                >
+              </div>
             </div>
-          </div>
-          <div
-            @click="showCreateForm"
-            class="min-h-40 flex items-center justify-center bg-white rounded-xl border border-green-500 text-green-600 duration-200 hover:scale-105 cursor-pointer"
-          >
-            <span>Добавить адрес</span>
           </div>
         </div>
       </div>
