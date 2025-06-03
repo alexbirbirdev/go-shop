@@ -1,7 +1,7 @@
 <script>
 import axios from 'axios'
 import VButton from '@/components/forms/VButton.vue'
-// import VSelect from '@/components/forms/VSelect.vue'
+import VSelect from '@/components/forms/VSelect.vue'
 import ProductCard from '@/components/ui/VProductCard.vue'
 import VBlockLoader from '@/components/loaders/VBlockLoader.vue'
 export default {
@@ -9,7 +9,7 @@ export default {
 
   components: {
     ProductCard,
-    // VSelect,
+    VSelect,
     VButton,
     VBlockLoader,
   },
@@ -29,28 +29,47 @@ export default {
       ],
       cart: [],
       selectedSort: {
-        value: 'name',
-        direction: 'asc',
+        value: null,
+        label: 'Сортировать по:',
       },
       sortOptions: [
-        { value: 'name_asc', label: 'По имени ↑', direction: 'asc' },
-        { value: 'name_desc', label: 'По имени ↓', direction: 'desc' },
-        { value: 'price_asc', label: 'По цене ↑', direction: 'asc' },
-        { value: 'price_desc', label: 'По цене ↓', direction: 'desc' },
-        { value: 'date_asc', label: 'По дате ↑', direction: 'asc' },
-        { value: 'date_desc', label: 'По дате ↓', direction: 'desc' },
+        { value: 'name_asc', label: 'По имени ↑' },
+        { value: 'name_desc', label: 'По имени ↓' },
+        { value: 'price_asc', label: 'По цене ↑' },
+        { value: 'price_desc', label: 'По цене ↓' },
+        { value: 'created_asc', label: 'По дате ↑' },
+        { value: 'created_desc', label: 'По дате ↓' },
       ],
 
-      isLoading: true,
+      isLoading: false,
+
+      filters: {
+        price_min: null,
+        price_max: null,
+      },
+
+      currentPage: 1,
+      itemsPerPage: 2,
+      moreAvailable: false,
+      prevAvailable: false,
     }
   },
 
   methods: {
-    addToCart() {
-      
-    },
     sortProducts(sortOption) {
-      console.log('Сортировка по:', sortOption)
+      const query = {
+        ...this.$route.query,
+        sort: sortOption.value,
+      }
+
+      // Убираем null/пустые параметры из URL
+      Object.keys(query).forEach((key) => {
+        if (query[key] === null || query[key] === '') {
+          delete query[key]
+        }
+      })
+
+      this.$router.push({ path: '/catalog', query })
     },
 
     async getCategories(id) {
@@ -88,20 +107,86 @@ export default {
     },
 
     async getProducts() {
+      if (this.isLoading) return
       try {
         this.isLoading = true
+        if (this.currentPage < 2) {
+          this.prevAvailable = false
+        } else {
+          this.prevAvailable = true
+        }
         const response = await axios.get('http://localhost:8080/products/', {
-          params: {},
+          params: {
+            price_min: this.$route.query.price_min,
+            price_max: this.$route.query.price_max,
+            category: this.$route.query.category || null,
+            sort: this.$route.query.sort || null,
+            page: this.currentPage,
+            limit: this.itemsPerPage,
+          },
           headers: {
             Authorization: localStorage.getItem('token'),
           },
         })
         this.products = response.data.products
+        this.$router.replace({
+          query: {
+            page: this.currentPage,
+            limit: this.itemsPerPage,
+          },
+        })
+        if (response.data.products.length === this.itemsPerPage) {
+          this.moreAvailable = true
+        } else if (response.data.products.length != this.itemsPerPage && this.currentPage == 1) {
+          this.moreAvailable = false
+          this.currentPage = 1
+        } else {
+          this.moreAvailable = false
+          this.currentPage--
+        }
       } catch (error) {
         console.log(error)
       } finally {
         this.isLoading = false
       }
+    },
+    loadPreviousProducts() {
+      if (this.currentPage > 1 && this.prevAvailable && !this.isLoading) {
+        this.currentPage--
+        this.getProducts()
+      }
+    },
+    loadMoreProducts() {
+      if (this.moreAvailable && !this.isLoading) {
+        this.currentPage++
+        this.getProducts()
+      }
+    },
+    handleFilters() {
+      const query = {
+        ...this.$route.query,
+        price_min: this.filters.price_min,
+        price_max: this.filters.price_max,
+      }
+
+      // Убираем null/пустые параметры из URL
+      Object.keys(query).forEach((key) => {
+        if (query[key] === null || query[key] === '') {
+          delete query[key]
+        }
+      })
+
+      this.$router.push({ path: '/catalog', query })
+    },
+    clearFilters() {
+      this.filters.price_min = null
+      this.filters.price_max = null
+
+      const query = { ...this.$route.query }
+      delete query.price_min
+      delete query.price_max
+
+      this.$router.push({ path: '/catalog', query })
     },
   },
   computed: {
@@ -115,21 +200,44 @@ export default {
       this.sortProducts(newVal)
     },
     '$route.query.category'(newVal) {
+      this.filters.price_max = null
+      this.filters.price_min = null
       this.categoryBack = ''
       this.getParentCategory(newVal)
       this.getCategories(newVal)
       this.categoryParentName = ''
+      this.getProducts()
+    },
+
+    '$route.query.price_min': 'getProducts',
+    '$route.query.price_max': 'getProducts',
+    '$route.query.sort': {
+      handler() {
+        this.selectedSort = this.sortOptions.find(
+          (opt) => opt.value === this.$route.query.sort,
+        ) || { value: null, label: 'Сортировать по:' }
+
+        this.getProducts()
+      },
+      immediate: true,
     },
   },
 
   created() {
+    const query = this.$route.query
+
+    // Загружаем фильтры из URL
+    this.filters.price_min = query.price_min || null
+    this.filters.price_max = query.price_max || null
+
     this.getProducts()
-    if (this.$route.query.category) {
-      this.getParentCategory(this.$route.query.category)
-      this.getCategories(this.$route.query.category)
+
+    if (query.category) {
+      this.getParentCategory(query.category)
+      this.getCategories(query.category)
     } else {
       this.categoryParentName = ''
-      this.getCategories(this.$route.query.category)
+      this.getCategories()
     }
   },
   mounted() {},
@@ -145,17 +253,15 @@ export default {
     <div class="grid grid-cols-5 gap-5">
       <div class="bg-white rounded-lg py-10 px-5 flex flex-col gap-4">
         <div>
+          <div class="text-lg font-bold mb-3">Категория</div>
           <div class="text-xs text-blue-600 *:duration-200 *:hover:text-blue-400">
-            <RouterLink
-              class="mb-2 block"
-              v-if="categoryBack"
-              :to="'/catalog/?category=' + categoryBack"
+            <RouterLink class="block" v-if="categoryBack" :to="'/catalog?category=' + categoryBack"
               >Назад</RouterLink
             >
             <RouterLink
-              class="mb-2 block"
+              class="block"
               v-if="categoryBack == null && categoryCurrent != ''"
-              to="/catalog/"
+              to="/catalog"
               >Назад</RouterLink
             >
           </div>
@@ -170,7 +276,7 @@ export default {
           >
             <!-- {{ subCategories }} -->
             <router-link
-              :to="'/catalog/?category=' + sc.id"
+              :to="'/catalog?category=' + sc.id"
               v-for="sc in subCategories"
               :key="sc.id"
               class="leading-[120%] hover:text-blue-600 duration-200"
@@ -178,15 +284,51 @@ export default {
             >
           </div>
         </div>
-        <div class="">фильтры</div>
-        <div class="">btn</div>
+        <form @submit.prevent.stop="handleFilters" class="grid gap-3 mt-3">
+          <div class="text-lg font-bold">Фильтры</div>
+          <div>
+            <label for="price_min" class="block text-sm font-medium text-gray-700">Цена от</label>
+            <input
+              id="price_min"
+              v-model="filters.price_min"
+              type="text"
+              class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+            />
+          </div>
+          <div>
+            <label for="price_max" class="block text-sm font-medium text-gray-700">Цена до</label>
+            <input
+              id="price_max"
+              v-model="filters.price_max"
+              type="text"
+              class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+            />
+          </div>
+          <VButton class="w-full">Применить</VButton>
+          <VButton @click="clearFilters" class="bg-neutral-200 w-full">Сбросить</VButton>
+        </form>
       </div>
-      <div class="col-span-4 flex flex-col gap-10">
+      <div class="col-span-4 flex flex-col gap-5">
         <div class="">
-          <!-- <VSelect v-model="selectedSort" :options="sortOptions" /> -->
+          <VSelect v-model="selectedSort" :options="sortOptions" />
+        </div>
+
+        <div class="grid grid-cols-4 gap-4" v-if="!isLoading && products.length">
+          <ProductCard v-for="product in products" :key="product.id" :product="product" />
+        </div>
+        <div
+          v-if="!products.length && !isLoading"
+          class="w-full p-5 text-2xl flex items-center gap-4 flex-col justify-center bg-neutral-200 rounded-2xl text-center"
+        >
+          Товаров нет :( <br />
+          <small>Попробуйте сбросить фильтры или выбрать другую категорию</small>
         </div>
         <div class="grid grid-cols-4 gap-4" v-if="isLoading">
-          <div v-for="i in 8" :key="i" class="bg-white rounded-lg shadow overflow-hidden flex flex-col justify-start">
+          <div
+            v-for="i in 8"
+            :key="i"
+            class="bg-white rounded-lg shadow overflow-hidden flex flex-col justify-start"
+          >
             <VBlockLoader class="w-full !rounded-none aspect-square" />
 
             <div class="px-4 py-2">
@@ -195,16 +337,65 @@ export default {
             </div>
           </div>
         </div>
-        <div class="grid grid-cols-4 gap-4" v-if="!isLoading">
-          <ProductCard
-            v-for="product in products"
-            :key="product.id"
-            :product="product"
-            @add-to-cart="addToCart"
-          />
-        </div>
-        <div class="flex justify-center">
-          <VButton>Загрузить еще</VButton>
+        <div class="flex justify-center items-center gap-4">
+          <div v-if="prevAvailable && !isLoading" class="flex justify-center mt-10">
+            <VButton :disabled="isLoading" @click="loadPreviousProducts">
+              <span v-if="isLoading" class="animate-spin"
+                ><svg
+                  class="w-4 h-4 *:fill-white"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M12 2.25C17.3848 2.25 21.75 6.61522 21.75 12C21.75 17.3848 17.3848 21.75 12 21.75C6.61522 21.75 2.25 17.3848 2.25 12C2.25 10.4448 2.61447 8.97237 3.26367 7.66602C3.44804 7.29514 3.89863 7.1438 4.26953 7.32812C4.6404 7.51249 4.79174 7.96308 4.60742 8.33398C4.05901 9.43754 3.75 10.6816 3.75 12C3.75 16.5563 7.44365 20.25 12 20.25C16.5563 20.25 20.25 16.5563 20.25 12C20.25 7.44365 16.5563 3.75 12 3.75C11.5858 3.75 11.25 3.41421 11.25 3C11.25 2.58579 11.5858 2.25 12 2.25Z"
+                    fill="black"
+                  />
+                </svg> </span
+              ><span v-else
+                ><svg
+                  class="w-4 h-4 *:fill-white"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M13.4697 5.46967C13.7626 5.17678 14.2373 5.17678 14.5302 5.46967C14.8231 5.76256 14.8231 6.23732 14.5302 6.53022L9.06049 11.9999L14.5302 17.4697L14.582 17.5263C14.8223 17.8209 14.8048 18.2556 14.5302 18.5302C14.2556 18.8048 13.8209 18.8223 13.5263 18.582L13.4697 18.5302L7.46967 12.5302C7.17678 12.2373 7.17678 11.7626 7.46967 11.4697L13.4697 5.46967Z"
+                    fill="black"
+                  />
+                </svg>
+              </span>
+            </VButton>
+          </div>
+          <div v-if="moreAvailable" class="flex justify-center mt-10">
+            <VButton :disabled="isLoading" @click="loadMoreProducts">
+              <span v-if="isLoading" class="animate-spin"
+                ><svg
+                  class="w-4 h-4 *:fill-white"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M12 2.25C17.3848 2.25 21.75 6.61522 21.75 12C21.75 17.3848 17.3848 21.75 12 21.75C6.61522 21.75 2.25 17.3848 2.25 12C2.25 10.4448 2.61447 8.97237 3.26367 7.66602C3.44804 7.29514 3.89863 7.1438 4.26953 7.32812C4.6404 7.51249 4.79174 7.96308 4.60742 8.33398C4.05901 9.43754 3.75 10.6816 3.75 12C3.75 16.5563 7.44365 20.25 12 20.25C16.5563 20.25 20.25 16.5563 20.25 12C20.25 7.44365 16.5563 3.75 12 3.75C11.5858 3.75 11.25 3.41421 11.25 3C11.25 2.58579 11.5858 2.25 12 2.25Z"
+                    fill="black"
+                  />
+                </svg> </span
+              ><span v-else>
+                <svg
+                  class="w-4 h-4 *:fill-white"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M9.46984 5.46984C9.74445 5.19524 10.1792 5.17778 10.4737 5.41809L10.5304 5.46984L16.5304 11.4698L16.5821 11.5265C16.8065 11.8014 16.8065 12.1988 16.5821 12.4737L16.5304 12.5304L10.5304 18.5304C10.2375 18.8233 9.76274 18.8233 9.46984 18.5304C9.17695 18.2375 9.17695 17.7627 9.46984 17.4698L14.9396 12.0001L9.46984 6.53039L9.41809 6.47375C9.17778 6.17917 9.19524 5.74445 9.46984 5.46984Z"
+                    fill="black"
+                  />
+                </svg>
+              </span>
+            </VButton>
+          </div>
         </div>
       </div>
     </div>

@@ -31,9 +31,9 @@ export default {
       currentPage: 1,
       itemsPerPage: 20,
       moreAvailable: false,
+      prevAvailable: false,
       showCreateProduct: false,
       isDeleting: false,
-      prevAvailable: false,
     }
   },
 
