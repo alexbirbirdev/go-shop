@@ -335,7 +335,7 @@ export default {
           <ProductCard v-for="product in products" :key="product.id" :product="product" />
         </div>
         <div
-          v-if="!products.length && !isLoading && $route.query.page == 1"
+          v-if="!products.length && !isLoading && $route.query.page <= 1"
           class="w-full p-5 text-2xl flex items-center gap-4 flex-col justify-center bg-neutral-200 rounded-2xl text-center"
         >
           Товаров нет :( <br />
