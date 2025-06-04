@@ -59,7 +59,7 @@ export default {
       <div class="grid gap-4 bg-neutral-50 rounded-2xl shadow px-4 py-6">
         <div class="flex justify-between gap-4" v-for="product in order.order_items" :key="product">
           <div
-            class="aspect-square w-35 flex items-center select-none justify-center border-2 border-neutral-300 rounded-lg overflow-hidden"
+            class="aspect-square h-auto w-35 flex items-center select-none justify-center border-2 border-neutral-300 rounded-lg overflow-hidden"
           >
             <img
               v-if="!product.product_variant.Product.images.length"
