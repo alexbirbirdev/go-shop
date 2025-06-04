@@ -57,7 +57,7 @@ export default {
     </div>
     <div class="grid gap-5">
       <div class="grid gap-4 bg-neutral-50 rounded-2xl shadow px-4 py-6">
-        <div class="flex justify-between gap-4" v-for="product in order.order_items" :key="product">
+        <div class="flex items-start justify-between gap-4" v-for="product in order.order_items" :key="product">
           <div
             class="aspect-square h-auto w-35 flex items-center select-none justify-center border-2 border-neutral-300 rounded-lg overflow-hidden"
           >
@@ -74,7 +74,7 @@ export default {
               class="max-h-full max-w-full"
             />
           </div>
-          <div class="flex flex-1 flex-col justify-between">
+          <div class="flex flex-1 flex-col justify-between gap-2">
             <div class="">
               <div class="text-lg">
                 {{ product.product_variant.Product.name }}
