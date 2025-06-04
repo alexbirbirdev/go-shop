@@ -74,7 +74,7 @@ export default {
               class="max-h-full max-w-full"
             />
           </div>
-          <div class="flex flex-1 flex-col justify-between gap-2">
+          <div class="flex flex-1 flex-col justify-between min-h-full gap-2">
             <div class="">
               <div class="text-lg">
                 {{ product.product_variant.Product.name }}
