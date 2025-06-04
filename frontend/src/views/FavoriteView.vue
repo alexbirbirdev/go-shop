@@ -27,7 +27,7 @@ export default {
   methods: {
     async deleteAll() {
       try {
-        await axios.delete('http://localhost:8080/favorites/', {
+        await axios.delete('/api/favorites/', {
           headers: {
             Authorization: localStorage.getItem('token'),
           },
@@ -41,7 +41,7 @@ export default {
     async getFavorites() {
       try {
         this.isLoading = true
-        const response = await axios.get('http://localhost:8080/favorites/', {
+        const response = await axios.get('/api/favorites/', {
           headers: {
             Authorization: localStorage.getItem('token'),
           },

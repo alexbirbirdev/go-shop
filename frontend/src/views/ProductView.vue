@@ -43,7 +43,7 @@ export default {
       try {
         this.isLoading = true
         const response = await axios.get(
-          'http://localhost:8080/products/' + this.$route.params.id,
+          '/api/products/' + this.$route.params.id,
 
           {
             headers: {
@@ -79,7 +79,7 @@ export default {
       try {
         this.favLoading = true
         if (isFav) {
-          await axios.delete(`http://localhost:8080/favorites/${variantId}`, {
+          await axios.delete(`/api/favorites/${variantId}`, {
             headers: {
               Authorization: localStorage.getItem('token'),
             },
@@ -88,7 +88,7 @@ export default {
           this.activeVariantData.is_fav = false
         } else {
           await axios.post(
-            `http://localhost:8080/favorites/`,
+            `/api/favorites/`,
             {
               product_variant_id: variantId,
             },
@@ -121,7 +121,7 @@ export default {
       try {
         this.cartLoading = true
         if (inCart) {
-          await axios.delete(`http://localhost:8080/cart/${variantId}`, {
+          await axios.delete(`/api/cart/${variantId}`, {
             headers: {
               Authorization: localStorage.getItem('token'),
             },
@@ -130,7 +130,7 @@ export default {
           this.$store.commit('cart/DECREMENT')
         } else {
           await axios.post(
-            `http://localhost:8080/cart/`,
+            `/api/cart/`,
             {
               product_variant_id: variantId,
               quantity: 1,

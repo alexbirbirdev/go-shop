@@ -55,7 +55,7 @@ export default {
           this.prevAvailable = true
         }
         this.isLoading = true
-        const response = await axios.get('http://localhost:8080/admin/products/', {
+        const response = await axios.get('/api/admin/products/', {
           params: {
             page: this.currentPage,
             limit: this.itemsPerPage,
@@ -99,7 +99,7 @@ export default {
       if (this.isDeleting) return
       try {
         this.isDeleting = true
-        await axios.delete('http://localhost:8080/admin/products/' + id, {
+        await axios.delete('/api/admin/products/' + id, {
           headers: {
             Authorization: localStorage.getItem('token'),
           },

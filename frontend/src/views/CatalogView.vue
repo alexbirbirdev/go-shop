@@ -79,10 +79,10 @@ export default {
       try {
         let response
         if (!id) {
-          response = await axios.get('http://localhost:8080/category/')
+          response = await axios.get('/api/category/')
           this.subCategories = response.data.categories
         } else {
-          response = await axios.get('http://localhost:8080/category/?parent_id=' + id)
+          response = await axios.get('/api/category/?parent_id=' + id)
           this.subCategories = response.data.categories[0].Children
         }
       } catch (error) {
@@ -98,7 +98,7 @@ export default {
         return
       }
       try {
-        const response = await axios.get('http://localhost:8080/category/' + id)
+        const response = await axios.get('/api/category/' + id)
         this.categoryCurrent = response.data.category.name
         this.categoryBack = response.data.category.parent_id
       } catch (error) {
@@ -117,7 +117,7 @@ export default {
         } else {
           this.prevAvailable = true
         }
-        const response = await axios.get('http://localhost:8080/products/', {
+        const response = await axios.get('/api/products/', {
           params: {
             price_min: this.$route.query.price_min,
             price_max: this.$route.query.price_max,

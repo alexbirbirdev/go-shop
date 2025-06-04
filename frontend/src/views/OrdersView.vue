@@ -22,7 +22,7 @@ export default {
     async getOrders() {
       try {
         this.isLoading = true
-        const response = await axios.get('http://localhost:8080/orders/', {
+        const response = await axios.get('/api/orders/', {
           headers: {
             Authorization: localStorage.getItem('token'),
           },

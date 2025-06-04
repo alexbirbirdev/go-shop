@@ -47,7 +47,7 @@ export default {
       this.loading = true
       try {
         const response = await axios.post(
-          'http://localhost:8080/auth/signup',
+          '/api/auth/signup',
           {
             email: this.form.email,
             password: this.form.password,

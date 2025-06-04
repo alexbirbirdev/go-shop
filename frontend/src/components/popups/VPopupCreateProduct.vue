@@ -105,7 +105,7 @@ export default {
         console.log('Форма с фото:', formData)
 
         const response = await axios.post(
-          `http://localhost:8080/admin/products/${productId}/images`,
+          `/api/admin/products/${productId}/images`,
           formData,
           {
             headers: {
@@ -128,7 +128,7 @@ export default {
 
         // 1. Сначала создаем основной товар
         const productResponse = await axios.post(
-          'http://localhost:8080/admin/products/',
+          '/api/admin/products/',
           {
             name: this.form.name,
             description: this.form.description,
@@ -151,7 +151,7 @@ export default {
 
         // 3. Добавляем варианты
         const variantsResponse = await axios.post(
-          `http://localhost:8080/admin/products/${productId}/variants`,
+          `/api/admin/products/${productId}/variants`,
           {
             variants: this.variants,
           },
@@ -195,7 +195,7 @@ export default {
     async getCategories() {
       try {
         this.loadingCategories = true
-        const response = await axios.get('http://localhost:8080/category/', {
+        const response = await axios.get('/api/category/', {
           headers: {
             Authorization: localStorage.getItem('token'),
           },
@@ -214,7 +214,7 @@ export default {
       try {
         this.loadingCategories = true
         const response = await axios.post(
-          'http://localhost:8080/admin/category/',
+          '/api/admin/category/',
           {
             name: this.addNewCategory,
           },

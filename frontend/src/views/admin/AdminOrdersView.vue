@@ -24,7 +24,7 @@ export default {
       try {
         this.isUpdating = true
         await axios.put(
-          `http://localhost:8080/admin/orders/${orderId}/status`,
+          `/api/admin/orders/${orderId}/status`,
           { status: newStatus },
           {
             headers: {
@@ -41,7 +41,7 @@ export default {
     async getOrders() {
       try {
         this.isLoading = true
-        const response = await axios.get('http://localhost:8080/admin/orders/', {
+        const response = await axios.get('/api/admin/orders/', {
           headers: {
             Authorization: localStorage.getItem('token'),
           },

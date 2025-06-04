@@ -30,7 +30,7 @@ export default {
           this.users = []
         }
         this.isLoading = true
-        const response = await axios.get('http://localhost:8080/admin/users/', {
+        const response = await axios.get('/api/admin/users/', {
           params: {
             page: this.currentPage,
             limit: this.itemsPerPage,

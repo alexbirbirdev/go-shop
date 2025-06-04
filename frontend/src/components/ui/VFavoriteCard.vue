@@ -27,7 +27,7 @@ export default {
       if (this.isDeleting) return
       try {
         this.isDeleting = true
-        await axios.delete('http://localhost:8080/favorites/' + id, {
+        await axios.delete('/api/favorites/' + id, {
           headers: {
             Authorization: localStorage.getItem('token'),
           },

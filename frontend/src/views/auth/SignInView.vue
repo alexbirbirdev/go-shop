@@ -35,7 +35,7 @@ export default {
     async handleSubmit() {
       this.loading = true
       try {
-        const response = await axios.post('http://localhost:8080/auth/signin', this.form, {
+        const response = await axios.post('/api/auth/signin', this.form, {
           headers: {
             'Content-Type': 'application/json',
           },

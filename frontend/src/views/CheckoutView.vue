@@ -39,7 +39,7 @@ export default {
     async getCart() {
       try {
         this.isCartLoading = true
-        const response = await axios.get('http://localhost:8080/cart/', {
+        const response = await axios.get('/api/cart/', {
           headers: {
             Authorization: localStorage.getItem('token'),
           },
@@ -59,7 +59,7 @@ export default {
       }
       try {
         this.loadingProfile = true
-        const response = await axios.get('http://localhost:8080/profile/', {
+        const response = await axios.get('/api/profile/', {
           headers: {
             Authorization: localStorage.getItem('token'),
           },
@@ -75,7 +75,7 @@ export default {
     async getAddresses() {
       try {
         this.loadingAddress = true
-        const response = await axios.get('http://localhost:8080/user-addresses/', {
+        const response = await axios.get('/api/user-addresses/', {
           headers: {
             Authorization: localStorage.getItem('token'),
           },
@@ -114,7 +114,7 @@ export default {
       try {
         this.isLoading = true
         await axios.post(
-          'http://localhost:8080/orders/',
+          '/api/orders/',
           {
             address: this.form.address,
             address_com: this.form.addressCom,

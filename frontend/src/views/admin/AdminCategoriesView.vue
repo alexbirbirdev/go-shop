@@ -47,7 +47,7 @@ export default {
     async getCategories() {
       this.categoryLoading = true
       try {
-        const response = await axios.get('http://localhost:8080/admin/category/all', {
+        const response = await axios.get('/api/admin/category/all', {
           params: {
             page: this.currentPage,
             limit: this.itemsPerPage,
@@ -70,7 +70,7 @@ export default {
       try {
         this.isUpdating = true
         await axios.put(
-          `http://localhost:8080/admin/category/${categoryId}`,
+          `/api/admin/category/${categoryId}`,
           { parent_id: newParentId },
           {
             headers: {
@@ -89,7 +89,7 @@ export default {
       if (this.isDeleting) return
       try {
         this.isDeleting = true
-        await axios.delete('http://localhost:8080/admin/category/' + id, {
+        await axios.delete('/api/admin/category/' + id, {
           headers: {
             Authorization: localStorage.getItem('token'),
           },
@@ -106,7 +106,7 @@ export default {
       try {
         this.isUpdating = true
         await axios.put(
-          `http://localhost:8080/admin/category/${categoryId}`,
+          `/api/admin/category/${categoryId}`,
           { name: newName },
           {
             headers: {
@@ -127,7 +127,7 @@ export default {
       try {
         this.loadingCategories = true
         await axios.post(
-          'http://localhost:8080/admin/category/',
+          '/api/admin/category/',
           {
             name: this.addNewCategory,
           },

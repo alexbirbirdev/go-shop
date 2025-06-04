@@ -32,7 +32,7 @@ export default {
     async getCart() {
       try {
         this.isLoading = true
-        const response = await axios.get('http://localhost:8080/cart/', {
+        const response = await axios.get('/api/cart/', {
           headers: {
             Authorization: localStorage.getItem('token'),
           },
@@ -47,7 +47,7 @@ export default {
     },
     async deleteCartItem(id, price, quantity) {
       try {
-        await axios.delete('http://localhost:8080/cart/' + id, {
+        await axios.delete('/api/cart/' + id, {
           headers: {
             Authorization: localStorage.getItem('token'),
           },
@@ -66,7 +66,7 @@ export default {
         const item = this.products.find((p) => p.ID === id)
         if (item && item.quantity > 1) {
           axios.post(
-            'http://localhost:8080/cart/decrement/' + id,
+            '/api/cart/decrement/' + id,
             {},
             {
               headers: {
@@ -93,7 +93,7 @@ export default {
         const item = this.products.find((p) => p.ID === id)
         if (item.quantity < item.product_variant.stock) {
           await axios.post(
-            'http://localhost:8080/cart/increment/' + id,
+            '/api/cart/increment/' + id,
             {},
             {
               headers: {

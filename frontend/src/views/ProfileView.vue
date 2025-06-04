@@ -116,7 +116,7 @@ export default {
       }
       try {
         this.loadingProfile = true
-        const response = await axios.get('http://localhost:8080/profile/', {
+        const response = await axios.get('/api/profile/', {
           headers: {
             Authorization: localStorage.getItem('token'),
           },
@@ -138,7 +138,7 @@ export default {
       try {
         this.loadingUpdateProfile = true
         await axios.put(
-          'http://localhost:8080/profile/',
+          '/api/profile/',
           {
             name: this.form.name,
             last_name: this.form.last_name,
@@ -163,7 +163,7 @@ export default {
       try {
         this.loadingAddress = true
         await axios.post(
-          'http://localhost:8080/user-addresses/',
+          '/api/user-addresses/',
           {
             title: this.formCreateAddress.title,
             city: this.formCreateAddress.city,
@@ -193,7 +193,7 @@ export default {
       console.log(this.editForm.ID)
       try {
         this.loadingAddress = true
-        await axios.put('http://localhost:8080/user-addresses/' + this.editForm.ID, this.editForm, {
+        await axios.put('/api/user-addresses/' + this.editForm.ID, this.editForm, {
           headers: {
             Authorization: localStorage.getItem('token'),
           },
@@ -211,7 +211,7 @@ export default {
       try {
         this.loadingAddress = true
         await axios.put(
-          'http://localhost:8080/user-addresses/' + id,
+          '/api/user-addresses/' + id,
           {
             is_default: true,
           },
@@ -231,7 +231,7 @@ export default {
     async getAddresses() {
       try {
         this.loadingAddress = true
-        const response = await axios.get('http://localhost:8080/user-addresses/', {
+        const response = await axios.get('/api/user-addresses/', {
           headers: {
             Authorization: localStorage.getItem('token'),
           },
@@ -245,7 +245,7 @@ export default {
     },
     async deleteAddress(id) {
       try {
-        await axios.delete('http://localhost:8080/user-addresses/' + id, {
+        await axios.delete('/api/user-addresses/' + id, {
           headers: {
             Authorization: localStorage.getItem('token'),
           },
