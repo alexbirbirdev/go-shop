@@ -279,7 +279,7 @@ export default {
   <div class="flex flex-col gap-10 max-w-xl mx-auto">
     <div
       v-if="showUpdateProfile"
-      class="bg-zinc-950/80 min-h-screen w-full fixed top-0 left-0 z-10 p-4 flex items-center justify-center"
+      class="bg-zinc-950/80 min-h-screen w-full fixed overflow-scroll top-0 left-0 z-30 p-4 flex items-center justify-center"
     >
       <div class="container max-w-sm bg-white p-5 rounded-xl flex flex-col gap-4">
         <div class="text-xl font-bold text-center">Редактирование профиля</div>
@@ -331,7 +331,7 @@ export default {
     </div>
     <div
       v-if="showCreateAddressForm"
-      class="bg-zinc-950/80 min-h-screen w-full fixed top-0 left-0 z-10 p-4 flex items-center justify-center"
+      class="bg-zinc-950/80 h-screen overflow-scroll w-full fixed top-0 left-0 z-30 py-10 px-4 flex items-start max-[768px]:items-center justify-center"
     >
       <div class="container max-w-xl bg-white p-5 rounded-xl flex flex-col gap-4">
         <div class="text-xl font-bold text-center">Добавить новый адрес</div>

@@ -268,7 +268,7 @@ export default {
 <template>
   <div class="flex flex-col gap-10">
     <!-- Каталог  -->
-    <div class="grid grid-cols-5 gap-5">
+    <div class="grid grid-cols-5 gap-5 max-[1024px]:grid-cols-4 max-[768px]:grid-cols-1">
       <div class="bg-white rounded-lg py-10 px-5 flex flex-col gap-4">
         <div>
           <div class="text-lg font-bold mb-3">Категория</div>
@@ -326,12 +326,12 @@ export default {
           <VButton @click="clearFilters" class="bg-neutral-200 w-full">Сбросить</VButton>
         </form>
       </div>
-      <div class="col-span-4 flex flex-col gap-5">
+      <div class="col-span-4 max-[1024px]:col-span-3 max-[768px]:col-span-1 flex flex-col gap-5">
         <div class="">
           <VSelect v-model="selectedSort" :options="sortOptions" />
         </div>
 
-        <div class="grid grid-cols-4 gap-4" v-if="!isLoading && products.length">
+        <div class="grid grid-cols-4 max-[1024px]:grid-cols-3 max-[520px]:grid-cols-2 gap-4" v-if="!isLoading && products.length">
           <ProductCard v-for="product in products" :key="product.id" :product="product" />
         </div>
         <div
@@ -341,7 +341,7 @@ export default {
           Товаров нет :( <br />
           <small>Попробуйте сбросить фильтры или выбрать другую категорию</small>
         </div>
-        <div class="grid grid-cols-4 gap-4" v-if="isLoading">
+        <div class="grid grid-cols-4 max-[1024px]:grid-cols-3  max-[520px]:grid-cols-2 gap-4" v-if="isLoading">
           <div
             v-for="i in 8"
             :key="i"

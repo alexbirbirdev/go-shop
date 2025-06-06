@@ -81,7 +81,7 @@ export default {
     <div v-if="products.length && !isLoading">
       <VButton :variant="'danger'" @click="deleteAll">Удалить все из избранного</VButton>
     </div>
-    <div class="grid grid-cols-5 gap-4" v-if="products.length && !isLoading">
+    <div class="grid grid-cols-5 max-[768px]:grid-cols-3 max-[520px]:grid-cols-2 max-[1024px]:grid-cols-4 gap-4" v-if="products.length && !isLoading">
       <VFavoriteCard
         @deleted="onCardDeleted"
         v-for="product in products"
@@ -89,7 +89,7 @@ export default {
         :product="product"
       />
     </div>
-    <div class="grid grid-cols-5 gap-4" v-if="isLoading">
+    <div class="grid grid-cols-5 max-[768px]:grid-cols-3 max-[520px]:grid-cols-2 max-[1024px]:grid-cols-4 gap-4" v-if="isLoading">
       <div
         v-for="i in 10"
         :key="i"
@@ -105,7 +105,7 @@ export default {
     </div>
     <div
       v-if="!products.length && !isLoading"
-      class="w-full p-5 text-2xl flex items-center gap-4 flex-col justify-center bg-neutral-200 rounded-2xl"
+      class="w-full p-5 max-[768px]:text-lg text-2xl flex items-center gap-4 flex-col justify-center bg-neutral-200 rounded-2xl"
     >
       Вы ничего не добавили в избранное
       <div>

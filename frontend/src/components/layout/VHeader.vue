@@ -86,7 +86,7 @@ export default {
 
 <template>
   <header class="bg-white shadow-sm py-4 fixed top-0 left-0 w-full z-20 flex justify-center">
-    <div class="container flex justify-between items-center">
+    <div class="container max-[768px]:px-4 flex justify-between items-center">
       <router-link to="/"><h1 class="text-xl font-bold">GO Shop</h1></router-link>
       <nav class="flex items-center gap-3">
         <router-link

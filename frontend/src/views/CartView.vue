@@ -128,14 +128,14 @@ export default {
 <template>
   <div class="max-w-5xl mx-auto">
     <h1 class="text-4xl font-bold">Корзина</h1>
-    <div class="mt-10 grid grid-cols-3 gap-10" v-if="isLoading">
-      <div class="col-span-2">
+    <div class="mt-10 grid grid-cols-3 gap-10 max-[768px]:grid-cols-1" v-if="isLoading">
+      <div class="col-span-2 max-[768px]:col-span-1">
         <div
           v-for="cartItem in 5"
           :key="cartItem"
           class="border-b-1 border-neutral-200 flex gap-5 py-5"
         >
-          <VBlockLoader class="aspect-square w-50" />
+          <VBlockLoader class="aspect-square w-50 max-[768px]:w-20" />
           <div class="flex flex-col justify-between items-start flex-1">
             <div class="flex items-start gap-4 justify-between w-full">
               <div class="grid gap-2 w-full">
@@ -163,16 +163,16 @@ export default {
         </div>
       </div>
     </div>
-    <div class="mt-10 grid grid-cols-3 gap-10" v-if="!isLoading && products.length">
-      <div class="col-span-2">
+    <div class="mt-10 grid grid-cols-3 gap-10 max-[768px]:grid-cols-1" v-if="!isLoading && products.length">
+      <div class="col-span-2 max-[768px]:col-span-1">
         <div
           v-for="cartItem in products"
           :key="cartItem"
-          class="border-b-1 border-neutral-200 flex gap-5 py-5"
+          class="border-b-1 border-neutral-200 flex gap-5 max-[768px]:gap-2 py-5"
         >
           <router-link
             :to="'/catalog/' + cartItem.product_variant.Product.ID"
-            class="aspect-square flex items-center select-none justify-center border-2 border-neutral-300 rounded-lg w-50 overflow-hidden relative before:w-full before:h-full before:absolute before:duration-200 hover:before:bg-sky-50/50"
+            class="aspect-square max-[768px]:w-20 flex items-center select-none justify-center border-2 border-neutral-300 rounded-lg w-50 overflow-hidden relative before:w-full before:h-full before:absolute before:duration-200 hover:before:bg-sky-50/50"
           >
             <img
               v-if="!cartItem.product_variant.Product.images.length"
@@ -328,7 +328,7 @@ export default {
 
     <div
       v-if="!products.length && !isLoading"
-      class="w-full p-5 text-2xl flex mt-10 items-center gap-4 flex-col justify-center bg-neutral-200 rounded-2xl"
+      class="w-full p-5 max-[768px]:text-lg text-2xl flex mt-10 items-center gap-4 flex-col justify-center bg-neutral-200 rounded-2xl"
     >
       В корзине пустно!
       <div>

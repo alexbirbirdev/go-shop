@@ -166,7 +166,7 @@ export default {
 
 <template>
   <div class="max-w-4xl mx-auto">
-    <div class="grid grid-cols-2 gap-10" v-if="isLoading">
+    <div class="grid min-[768px]:grid-cols-2 gap-10" v-if="isLoading">
       <div class="">
         <VBlockLoader class="w-full aspect-square" />
         <div class="grid-cols-4 mt-4 grid gap-2">
@@ -190,7 +190,7 @@ export default {
         </div>
       </div>
     </div>
-    <div class="grid grid-cols-2 gap-10" v-if="!isLoading">
+    <div class="grid min-[768px]:grid-cols-2 gap-10" v-if="!isLoading">
       <div class="">
         <div
           class="aspect-square overflow-hidden rounded-2xl border-4 border-neutral-100 flex items-center justify-center"
@@ -282,10 +282,10 @@ export default {
                   fill="black"
                 />
               </svg> </span
-            ><span v-else>Убрать из корзины</span></VButton
+            ><span v-else class="max-[520px]:!text-sm">Убрать из корзины</span></VButton
           >
           <router-link :disabled="cartLoading" to="/cart/" v-if="activeVariantData?.in_cart"
-            ><VButton class="">Перейти в корзину</VButton></router-link
+            ><VButton class="max-[520px]:!text-sm">Перейти в корзину</VButton></router-link
           >
 
           <div

@@ -134,7 +134,7 @@ export default {
 
     <div
       v-if="!orders.length && !isLoading"
-      class="w-full p-5 text-2xl flex items-center gap-4 flex-col justify-center bg-neutral-200 rounded-2xl"
+      class="w-full p-5 max-[768px]:text-lg text-2xl flex items-center gap-4 flex-col justify-center bg-neutral-200 rounded-2xl"
     >
       Вы не сделали ни одного заказа
       <div>

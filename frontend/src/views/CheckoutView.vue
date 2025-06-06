@@ -155,7 +155,7 @@ export default {
 <template>
   <div class="max-w-3xl mx-auto">
     <div class="text-4xl font-bold mb-10">Оформление заказа</div>
-    <form @submit.prevent.stop="handleForm" class="grid grid-cols-2 gap-10">
+    <form @submit.prevent.stop="handleForm" class="grid min-[768px]:grid-cols-2 gap-10">
       <div class="flex flex-col gap-5">
         <div>
           <label for="phone" class="block text-sm font-medium text-gray-700"
