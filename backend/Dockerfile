@@ -1,5 +1,5 @@
 # Сборка
-FROM golang:1.23 as builder
+FROM golang:1.22.4 as builder
 WORKDIR /app
 COPY . .
 RUN go mod download
@@ -10,7 +10,6 @@ FROM alpine:latest
 WORKDIR /app
 COPY --from=builder /app/bin/go-shop .
 COPY --from=builder /app/config ./config
-COPY --from=builder /app/.env .
 
 EXPOSE 8080
-CMD [ "./go-shop" ]
+CMD ["./go-shop"]
